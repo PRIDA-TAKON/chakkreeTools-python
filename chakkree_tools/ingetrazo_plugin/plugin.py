@@ -7,19 +7,23 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 try:
-    from ingetrazo.sdk import Tool  # type: ignore
+    from tools.base import Tool  # type: ignore
 except ImportError:
-    class Tool:
-        """Fallback base Tool class when IngeTrazo SDK is not installed."""
-        def __init__(self, name: str = "ChakkreeToolsPlugin") -> None:
-            self.name = name
-            self.active = False
+    try:
+        from ingetrazo.sdk import Tool  # type: ignore
+    except ImportError:
+        class Tool:
+            """Fallback base Tool class when IngeTrazo SDK is not installed."""
+            def __init__(self, name: str = "ChakkreeToolsPlugin") -> None:
+                self.name = name
+                self.active = False
 
-        def activate(self) -> None:
-            self.active = True
+            def activate(self) -> None:
+                self.active = True
 
-        def deactivate(self) -> None:
-            self.active = False
+            def deactivate(self) -> None:
+                self.active = False
+
 
 
 class ChakkreeToolsPlugin(Tool):

@@ -6,7 +6,15 @@ Fully compatible with project-debim (debim CLI and debim-ingetrazo).
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
-import yaml
+
+try:
+    import yaml
+    def _dump_manifest(data: Any) -> str:
+        return yaml.dump(data, sort_keys=False, allow_unicode=True)
+except ImportError:
+    from chakkree_tools.exporter.pure_yaml import dump_yaml as _dump_manifest
+
+
 
 
 class DebimExporter:
@@ -73,7 +81,8 @@ class DebimExporter:
     def to_yaml(self) -> str:
         """Serializes manifest to clean YAML formatted string."""
         data = self.to_dict()
-        return yaml.dump(data, sort_keys=False, allow_unicode=True)
+        return _dump_manifest(data)
+
 
     def save(self, filepath: Union[str, Path]) -> Path:
         """Saves manifest to a .debim or .debim.yaml file."""

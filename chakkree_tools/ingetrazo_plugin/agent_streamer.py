@@ -7,9 +7,15 @@ from typing import Any, Dict, List, Optional, Union
 import json
 import urllib.error
 import urllib.request
-import yaml
+try:
+    import yaml
+    def _dump_yaml_str(data: Any) -> str:
+        return yaml.dump(data, sort_keys=False, allow_unicode=True)
+except ImportError:
+    from chakkree_tools.exporter.pure_yaml import dump_yaml as _dump_yaml_str
 
 from chakkree_tools.exporter.debim_exporter import DebimExporter
+
 
 
 class AgentStreamerError(Exception):
@@ -74,8 +80,9 @@ class AgentStreamer:
         :return: Parsed response dict or status details.
         """
         if isinstance(manifest, dict):
-            payload_yaml = yaml.dump(manifest, sort_keys=False, allow_unicode=True)
+            payload_yaml = _dump_yaml_str(manifest)
         elif isinstance(manifest, str):
+
             payload_yaml = manifest
         else:
             raise ValueError("Manifest must be a dict or YAML string.")
