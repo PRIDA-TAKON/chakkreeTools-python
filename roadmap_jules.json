@@ -1,0 +1,38 @@
+[
+  {
+    "step": 1,
+    "match_keywords": ["s2d", "parser"],
+    "next_issue": {
+      "title": "feat(rc): 3D Rebar Polyline and Mesh Generator for IngeTrazo Viewport",
+      "body": "### Overview\nImplement Task 2 from `JULES_BACKLOG.md`: Generate 3D spatial coordinate polyline points and tubular meshes for rebar visualization in IngeTrazo.\n\n### Tasks\n1. Create `chakkree_tools/rc/rebar_mesh.py`\n2. Implement standard Thai rebar shapes according to TIS / EIT (วสท. / มอก.):\n   - Shape 00: Straight bar (เหล็กเส้นตรง)\n   - Shape 21: U-bent bar with hooks for beam main bars (เหล็กนอนดัดฉาก)\n   - Shape 41: Rectangular closed stirrup with 135-degree seismic hooks (เหล็กปลอก)\n   - Shape 99: Column vertical bar with 90-degree foundation dowel bend (เหล็กยืนเสาฝากฐานราก)\n3. Return vertices and line indices ready for IngeTrazo 3D canvas.\n4. Add comprehensive unit tests in `tests/test_rebar_mesh.py`.",
+      "label": "jules"
+    }
+  },
+  {
+    "step": 2,
+    "match_keywords": ["rebar", "mesh"],
+    "next_issue": {
+      "title": "feat(ui): Native PySide6 Parametric Dialogs for IngeTrazo Extension",
+      "body": "### Overview\nImplement Task 3 from `JULES_BACKLOG.md`: Provide native, responsive PySide6 dialogs inside IngeTrazo for structural parameters.\n\n### Tasks\n1. Create `chakkree_tools/ingetrazo_plugin/ui/footing_dialog.py` (Select 1-9 Piles, pile diameter, rebar sizes, covering).\n2. Create `chakkree_tools/ingetrazo_plugin/ui/column_dialog.py` (Section b x h, height, 4-16 longitudinal bars, stirrups).\n3. Create `chakkree_tools/ingetrazo_plugin/ui/beam_dialog.py` (Span length, b x h, top/bottom bars, multi-zone stirrups).\n4. Wire dialog actions to `plugin.py` to trigger model generation.\n5. Add tests in `tests/test_ui_dialogs.py`.",
+      "label": "jules"
+    }
+  },
+  {
+    "step": 3,
+    "match_keywords": ["dialog", "pyside6"],
+    "next_issue": {
+      "title": "feat(qto): Automated Bar Bending Schedule (BBS) and Material Take-off Report",
+      "body": "### Overview\nImplement Task 4 from `JULES_BACKLOG.md`: Port quantity take-off formulas from original Chakkree Tools QTO modules.\n\n### Tasks\n1. Create `chakkree_tools/qto/bar_schedule.py` calculating cut lengths, hook allowances, and steel weights (kg) for RB6, RB9, DB12, DB16, DB20, DB25, DB28, DB32.\n2. Create `chakkree_tools/qto/takeoff.py` for concrete volume, formwork area, lean concrete, and excavation.\n3. Add export functions to Markdown table and CSV format.\n4. Add unit tests in `tests/test_qto.py`.",
+      "label": "jules"
+    }
+  },
+  {
+    "step": 4,
+    "match_keywords": ["qto", "schedule"],
+    "next_issue": {
+      "title": "feat(bridge): Live Model Streaming to IngeTrazo via Agent Bridge (Port 8482)",
+      "body": "### Overview\nImplement Task 5 from `JULES_BACKLOG.md`: Enable real-time live streaming of designed models directly into the running IngeTrazo 3D viewport without saving files.\n\n### Tasks\n1. Create `chakkree_tools/ingetrazo_plugin/agent_streamer.py`.\n2. Send generated `.debim.yaml` manifests via HTTP POST to `http://127.0.0.1:8482`.\n3. Add probe listener check and error handling.\n4. Add unit tests in `tests/test_agent_streamer.py`.",
+      "label": "jules"
+    }
+  }
+]
