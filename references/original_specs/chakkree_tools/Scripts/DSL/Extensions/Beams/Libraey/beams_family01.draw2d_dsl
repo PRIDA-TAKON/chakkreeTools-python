@@ -1,0 +1,55 @@
+## draw2d_dsl
+## วาดหน้าตัดคาน
+
+beamList = {
+  'B1'=>{'size'=> [150.mm, 300.mm],
+         'rebars'=>[ [ [[2,12.mm],[0,12.mm]], [[2,12.mm],[0,12.mm]] ] , [6.mm,150.mm]]
+  },
+  'B2'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,12.mm],[0,12.mm]], [[2,12.mm],[1,12.mm]] ] , [6.mm,150.mm]]
+  },
+  'B3'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,16.mm],[0,16.mm]], [[2,16.mm],[1,16.mm]] ] , [6.mm,150.mm]]
+  },
+  'B3X'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,16.mm],[2,16.mm]], [[2,16.mm],[0,16.mm]] ] , [6.mm,150.mm]]
+  },
+  'B4'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,16.mm],[0,16.mm]], [[2,16.mm],[2,16.mm]] ] , [6.mm,150.mm]]
+  },
+  'B4X'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,16.mm],[0,16.mm]], [[2,16.mm],[0,16.mm]] ] , [6.mm,150.mm]]
+  },
+  'B5'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,16.mm],[0,16.mm]], [[2,16.mm],[3,16.mm]] ] , [9.mm,150.mm]]
+  },
+  'B5X'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[2,16.mm],[1,16.mm]], [[3,16.mm],[0,16.mm]] ] , [9.mm,150.mm]]
+  },
+  'B6'=>{'size'=> [200.mm, 400.mm],
+         'rebars'=>[ [ [[3,16.mm],[0,16.mm]], [[3,16.mm],[0,16.mm]] ] , [9.mm,100.mm]]
+  },
+}
+
+def draw_all_beam(beamList)
+  	mainGrp = new_group('Beams_Familt01')
+		set_host mainGrp
+    i = 1
+    x = 0; y = 0
+    beamList.each{|name, data|
+       grp = mainGrp.entities.add_group
+       grp.name = name
+       set_host  grp
+       beam_section [x ,y], name , data['size'], data['rebars']
+       grp.transform! Geom::Transformation.translation([x,y,0])
+       x += 1.m
+       if i%3==0 then	
+          x= 0;  y -= 1.m
+       end
+       i+=1
+    }
+    set_host mainGrp
+  	mainGrp.transform!  Geom::Transformation.rotation([0,0,0], X_AXIS, 90.degrees)
+end
+
+draw_all_beam beamList

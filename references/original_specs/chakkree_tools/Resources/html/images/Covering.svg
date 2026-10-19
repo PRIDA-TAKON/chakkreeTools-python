@@ -1,0 +1,18 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none" stroke="none"/>
+   <g transform='translate(27.5,27.5)' style="stroke:grey;">
+        <circle cx="0" cy="0" r ="20" style="stroke:blue; stroke-width:1; fill:white ; stroke-dasharray:4,2;"/>
+       <path d="M 0 -19 L 0 19 q -19 0 -19 -19 q 0 -19 19 -19" style="stroke:none;fill:gainsboro;"/>
+       <line x1="-7" x2="-7" y1="-18.5" y2="18.5" style="stroke:black; stroke-width:2;" />
+	   
+	   <line x1="-5" x2="-19" y1="0" y2="0" style="stroke:blue; stroke-width:2; stroke-linecap:round;" />
+	   <line x1="-5" x2="-16.5" y1="-10" y2="-10" style="stroke:blue; stroke-width:2; stroke-linecap:round;" />
+	   <line x1="-5" x2="-16.5" y1="10" y2="10" style="stroke:blue; stroke-width:2; stroke-linecap:round;" />
+	   
+   </g>
+
+</svg>

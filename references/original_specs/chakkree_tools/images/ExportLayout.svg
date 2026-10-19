@@ -1,0 +1,21 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="100" height="100" viewBox="0 0 100 100">
+  <!-- สงวนลิขสิทธิ์ ©2022 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   
+   <!--image href="column3d.png" height="59" width="59" transform='translate(0,-1)'/-->
+   
+   <g id='L' stroke='blue' stroke-width='5'  transform='translate(15,15)'>
+        <path d='M 0 0 v 42 h 30'  fill='none'/>
+   </g>
+   <g id='O' stroke='blue' stroke-width='5'  transform='translate(60,15)'>
+        <circle cx='0' cy='20' r = '20'  fill='none'/>
+   </g>
+   <g id='arrow' stroke='black' stroke-width='5'  transform='translate(10,75)'>
+        <line x1='0' y1='0' x2='80' y2='0'/>
+		<path d='M 70 15 l 10 -15 l -10 -15'  fill='none'/>
+   </g>
+   
+</svg>

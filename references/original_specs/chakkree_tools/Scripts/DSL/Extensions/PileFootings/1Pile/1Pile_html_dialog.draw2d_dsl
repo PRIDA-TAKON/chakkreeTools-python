@@ -1,0 +1,168 @@
+## 1Pile.draw2d_dsl
+
+# TopView RectPile
+# -------------------------
+
+# จองก่อน เพื่อใช้เป็นค่า default
+b = 700.mm
+t = b
+cvr = 50.mm
+dp = 220.mm         # ขนาดเสาเข็ม
+n1 = 4
+dia1 = 12.mm
+n2 = 5
+dia2 = 16.mm
+nStir=3
+diaStir = 9.mm
+
+sel = Sketchup.active_model.selection[0]
+if sel != nil then
+  type = sel.get_attribute "chakkree_tools" , "type"
+  creater = sel.get_attribute "chakkree_tools" , "script_creater"
+end
+select_old_footing = false
+if type=="Footing_2DTOP" and creater=='ฐานรากเสาเข็ม1ต้นแบบ1' then
+   puts "OK เลือกฐานราก "
+   json = sel.get_attribute "chakkree_tools" , "data"
+   data = JSON.parse(json)
+   b = data['B'].to_l
+   t = data['t'].to_l
+   cvr = data['covering'].to_l
+   dp = data['Dp'].to_l         # ขนาดเสาเข็ม
+   pile_type = data['pile_type']       # ชนิดเสาเข็ม
+   n1 = data['n1']
+   dia1 = data['dia1'].to_l
+   n2 = data['n2']
+   dia2 = data['dia2'].to_l
+   nStir = data['nStir']
+   diaStir = data['diaStir'].to_l
+   select_old_footing = true
+end
+
+prompts = ['B=','t=','ระยะหุ้ม=' , 'ขนาดเสาเข็ม = ' , 
+     'จำนวนเหล็กเสริมแนวนอน = ' , 'dia.เหล็กเสริมแนวนอน = ' , 
+     'จำนวนเหล็กเสริมแนวตั้ง = ' , 'dia.เหล็กเสริมแนวตั้ง = ' , 
+     'จำนวนเหล็กรัดรอบ = ','dia.เหล็กรัดรอบ = ']
+defaults = [b, t, cvr, "%dmm"% dp.to_mm.round,  
+            n1 ,"%dmm"% dia1.to_mm.round, 
+            n2 ,"%dmm"% dia2.to_mm.round, 
+            nStir ,  "%dmm"% diaStir.to_mm.round ]
+list = ['','','','180mm|220mm|260mm|300mm|350mm|400mm|450mm|650mm', 
+      '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , 
+      '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , 
+      '', '6mm|9mm|12mm']
+
+#inp = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 1 ต้น')
+option = {
+  'title'=>'ป้อนข้อมูล PileCAP เสาเข็ม 1 ต้น',
+  'size'=>[800,600]
+}
+data = html_dialog('input_1PileTopView.html', option)
+
+if data.count>0 then
+   b = data['B'].to_l
+   t = data['t'].to_l
+   cvr = data['cvr'].to_l
+   dp = data['Dp'].to_l         # ขนาดเสาเข็ม
+   pile_type = data['pile_type']
+   n1 = data['n1']
+   dia1 = data['dia1'].to_l
+   n2 = data['n2']
+   dia2 = data['dia2'].to_l
+   nStir= data['nStir']
+   diaStir = data['diaStir'].to_l
+  
+   factorDb = 4.0
+   factorLh = 6.0
+   # -------------------------
+   fSize = 55.mm
+   # -------------------------
+   if select_old_footing then
+      set_host sel
+      sel.entities.clear!
+   else
+     set_host new_group( "TopView_1RectPile" )
+   end
+   # center cross
+   wtC = 50.mm
+   line [-wtC , 0] , [wtC , 0]
+   line [0,-wtC],    [0  , wtC]
+
+   # concrete
+   rect [-b/2 , -b/2] , [b ,b]
+   rect [-b/2-0.1.mm , -b/2-0.1.mm] , [b+0.2.mm ,b+0.2.mm]
+
+   dimension [-b/2 , b/2+350.mm] , b , 100.mm , b.to_l.to_s , fSize
+   dimension [-b/2-350.mm , -b/2] , b , 100.mm ,  b.to_l.to_s , fSize, 90.degrees
+
+   # minor dim
+   dimension [-b/2 , b/2+150.mm] , b/2 , 150.mm , (b/2).to_l.to_s , fSize
+   dimension [   0 , b/2+150.mm] , b/2 , 150.mm , (b/2).to_l.to_s , fSize
+
+   dimension [-b/2-150.mm , -b/2] , b/2 , 150.mm , (b/2).to_l.to_s , fSize, 90.degrees
+   dimension [-b/2-150.mm ,  0] , b/2 , 150.mm , (b/2).to_l.to_s , fSize, 90.degrees
+
+   linedash [0, -b/2-200.mm] , [0, b/2+200.mm],[50.mm,10.mm] 
+   linedash [-b/2, -b/2-200.mm] , [-b/2, b/2+200.mm],[30.mm,10.mm] 
+   linedash [b/2, -b/2-200.mm] ,  [b/2, b/2+200.mm],[30.mm,10.mm] 
+  
+   linedash [-b/2-200.mm , 0],[ b/2+200.mm, 0 ],[30.mm,10.mm] 
+   linedash [-b/2-200.mm , -b/2], [b/2+200.mm, -b/2 ],[30.mm,10.mm] 
+   linedash [-b/2-200.mm ,  b/2], [b/2+200.mm,  b/2 ] ,[30.mm,10.mm] 
+  
+   # Rect Pile
+   wFillet = 10.mm
+   if pile_type.upcase=='RECT' then
+       pile_rect_section   [0 , 0] , 'R%d'% (dp.to_mm.round) , wFillet , 'Gainsboro'
+   elsif pile_type.upcase=='I' then
+       pile_I_section [0 , 0] , '%dx%d'%[dp.to_cm,dp.to_cm] , wFillet , 'Gainsboro'
+   end
+
+   # เหล็กปลอกรัดรอบ
+   a = b - 2*cvr
+   b1 = a
+   c = ((factorDb+1)/2+factorLh)*diaStir
+   r = factorDb/2 * diaStir
+   rebar2d [ -a/2  , b1/2] ,'51' , [a, b1 , c  ] , diaStir , r 
+  
+   # ปรับแก้การหมุน 45 องศา
+   a = (a/2 +  dia1*1.5 )/ Math.cos(45.degrees)  
+   b1 = (b1/2 +  dia1*2 )/ Math.cos(45.degrees)
+   stir2 = rebar2d [-(b1 / 2) , (a / 2)] ,'51' , [a, b1 , c  ] , diaStir , r 
+   rot = Geom::Transformation.rotation([0,0,0], Z_AXIS, 45.degrees) 
+   stir2.transform! rot
+  
+   # เหล็กตะกร้อคว่ำ
+   str1 = dia1.to_mm.round.to_s 
+   dia1>9.mm ? str1 = "DB" + str1 : str1 = "RB" + str1
+   text [b / 2 + 100.mm  ,  b/2 - 150.mm] , 
+       "เหล็กตะกร้อคว่ำ " + n1.to_s  + "-"  + str1 + "มม" , fSize
+   # เหล็กตะแกรง
+   str2 = dia2.to_mm.round.to_s 
+   dia2>9.mm ? str2 = "DB" + str2 : str2 = "RB" + str2
+   text [b / 2 + 100.mm  ,  b/2 - 150.mm - 2*fSize ] , 
+       "เหล็กตะแกรง " + n2.to_s  + "-"  + str2 + "มม" , fSize
+   # วงแรก เหล็กรัดรอบ
+   str3 = diaStir.to_mm.round.to_s 
+   diaStir>9.mm ? str3 = "2DB" + str3 : str3 = "2RB" + str3
+   text [-b / 2  ,  -b/2 - 400.mm] , 
+       "เหล็กรัดรอบ " + nStir.to_s  + "ชุด-"  + str3 + "มม" , fSize
+  
+   # ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+   data = {
+      "B"=>"%dmm"% (b.to_mm.round), 
+      "t"=>"%dmm"% (t.to_mm.round), 
+      "covering"=>"%dmm"% (cvr.to_mm.round), 
+      "Dp"=> "%dmm"% (dp.to_mm.round), 
+      "pile_type"=>  pile_type, 
+      "n1"=> n1 , "dia1"=>"%dmm"% (dia1.to_mm.round) , 
+      "n2"=> n2 , "dia2"=>"%dmm"% (dia2.to_mm.round) , 
+      "nStir"=> nStir , "diaStir"=>"%dmm"% (diaStir.to_mm.round)  
+   }
+   @@host.set_attribute "chakkree_tools", "type",  "Footing_2DTOP"
+   @@host.set_attribute "chakkree_tools", "script_creater" , "ฐานรากเสาเข็ม1ต้นแบบ1"
+   @@host.set_attribute "chakkree_tools", "engine",  "Draw2D_DSL"
+   @@host.set_attribute "chakkree_tools", "rebar_script" , "PileFootings/1Pile/1Pile.rebar_dsl"
+   @@host.set_attribute "chakkree_tools", "data", data.to_json 
+   
+end

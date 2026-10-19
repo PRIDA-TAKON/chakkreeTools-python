@@ -1,0 +1,17 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="100" height="100" viewBox="0 0 100 100">
+  <!-- สงวนลิขสิทธิ์ ©2022 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   
+   <!--image href="column3d.png" height="59" width="59" transform='translate(0,-1)'/-->
+   
+   <g id='arrow' stroke='blue' stroke-width='1.6'  transform='translate(50,50)'>
+        
+		<path d='M 0 -10 L 5.5 -9.7 L 10.6 -8.9 L 15.8 -7.4 L 20.8 -5.5 L 25.5 -3 L 30 0 L 35 0 v -6.7 L30 -10 L25.5 -13.0 L 20.8 -15.5 L15.8 -17.4 L10.6 -18.9 L5.5 -19.7 L 0 -20 L-5.5 -19.7 L-10.6 -18.9 L-15.8 -17.4 L -20.8 -15.5 L-25.5 -13.0 L-30 -10 L-35 -6.7 L-35 0  L -30 0 L -25.5 -3 L -20.8 -5.5 L -15.8 -7.4 L -10.6 -8.9 L -5.5 -9.7 z '  fill='white'/>
+		<path d="M-35 -6.7 L-30 0 L-30 -10 L -15.8 -7.4 L-15.8 -17.4 L0 -10 L15.8 -17.4 L15.8 -7.4 L30 -10  L30 0 L 35 -6.7" fill='none'  stroke-linejoin="round"/>
+		<line x1='0' x2='0' y1='-10' y2='-20'/>
+   </g>
+   
+</svg>

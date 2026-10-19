@@ -1,0 +1,84 @@
+# เสา สี่เหลี่่ยม เหล็กยืน 8 เส้น 
+
+CheckCreator "chakkree_tools","หน้าตัดเสาสี่เหลี่ยมเหล็กยืน8แบบ1"
+get_attribute "chakkree_tools", "data", 'JSON' 
+
+inputbox 'ป้อนค่าสร้างเสา 3D', \
+   ["ความสูงเสา = " , "ระยะยื่นเหล็กเสริมด้านบน = " ,  \
+                 "ระยะยื่นเหล็กเสริมด้านล่าง = "], \
+   [1000.mm , -50.mm  , 200.mm  ] , \
+   ["","" ,""] , \
+   ['h', 'ext_top' , 'ext_bttm']
+
+set b = '$b'.to_l
+set t = '$t'.to_l
+set dia1 = '$dia1'.to_l
+set diaStir  = '$diaStir'.to_l
+var s = '$spacing'.to_l
+var cvr = '$covering'.to_l
+
+
+# concrete
+Box 'concrete' , [$b,$t,$h] ,['concrete','Bisque',0.3]
+Translate 'concrete' , [0,0,$h/2]
+
+var a1 = 300.mm - $dia1/2
+var b1 = 0
+var z1 = -$ext_bttm + $dia1/2
+var dx = $b/2 - $cvr - $diaStir - $dia1/2
+var dy = $t/2 - $cvr - $diaStir - $dia1/2
+# เหล็กยืน มุม ๆ
+rebar 'M1', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+tran 'M1',[-$dx , -$dy , 0]
+rebar 'M2', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+rot 'M2' , [0,0,0] , [0,0,1] , 180
+tran 'M2',[$dx , -$dy , 0]
+rebar 'M3', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+tran 'M3',[-$dx , $dy , 0]
+rebar 'M4', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+rot 'M4' , [0,0,0] , [0,0,1] , 180
+tran 'M4',[$dx , $dy , 0]
+
+# เหล็กยืน กลาง ๆ
+var s1 = ($dx*2) / 3
+set  dx = $dx - $s1
+rebar 'M5', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+rot 'M5' , [0,0,0] , [0,0,1] , 90
+tran 'M5',[-$s1/2 , -$dy , 0]
+rebar 'M6', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+rot 'M6' , [0,0,0] , [0,0,1] , 90
+tran 'M6',[$s1/2 , -$dy , 0]
+rebar 'M7', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+rot 'M7' , [0,0,0] , [0,0,1] , -90
+tran 'M7',[-$s1/2 , $dy , 0]
+rebar 'M8', $dia1 , 99 , \
+  [(-$a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+rot 'M8' , [0,0,0] , [0,0,1] , -90
+tran 'M8',[$s1/2 , $dy , 0]
+
+set a1 = $b - 2*$cvr
+set b1 = $t - 2*$cvr
+var nStir = (($ext_bttm - 50.mm + $h)/$s).round
+set factor_Lh = 4
+
+rebar 'stir1', 6.mm , 51 , [$b1, $a1 , 135] , default #, $nStir , $s
+rot 'stir1',[0,0,0],[0,1,0] , -90
+tran 'stir1', [0,0, -$ext_bttm + 50.mm] 
+Make_Component 'stir1'        # มาใหม่ v0.2.15+
+copy 'stir1', $nStir - 1 , [0, 0, $s] 
+
+set a1 = $s1 + $dia1 + $diaStir * 2
+rebar 'stir2', 6.mm , 51 , [$b1, $a1 , 135] , default #, $nStir  , $s
+rot 'stir2',[0,0,0],[0,1,0] , -90
+tran 'stir2', [0,0, -$ext_bttm + 50.mm + $diaStir*1.3] 
+Make_Component 'stir2'        # มาใหม่ v0.2.15+
+copy 'stir2', $nStir - 1 , [0, 0, $s] 
+
+set_rotation_same_selected

@@ -1,0 +1,111 @@
+# Draw Elevation สำหรับ บ้านสองชั้น
+
+name Elevation
+
+var Elev_0 = 0.mm
+var Elev_1 = 600.mm
+var Elev_2 = 3750.mm
+var Elev_R = 6650.mm
+
+
+break_IfNOT  "ค่าระดับ_ครอบครับไทยร่วมสมัย๓"
+
+# ตรวจว่าเป็นของเรา ตามบรรทัดบน
+get_attribute "chakkree_tools", "script_creater", 'STRING'  
+
+# เป็น trick ในการลักไก่
+if "$script_creater"== "ค่าระดับ_ครอบครับไทยร่วมสมัย๓"
+   get_attribute "chakkree_tools", "data", "JSON"
+   set Elev_0  = '$Elev_0'.to_l
+   set Elev_1  = '$Elev_1'.to_l
+   set Elev_2  = '$Elev_2'.to_l
+   set Elev_R  = '$Elev_R'.to_l
+end
+
+inputbox 'กำหนดค่าระดับ' , \
+    ['ระดับคานหลังคา =', 'ระดับพื้นชั้น 2 = ', 'ระดับพื้นชั้น 1 = ','ระดับอ้างอิง = '], \
+    [ $Elev_R ,$Elev_2,$Elev_1 , $Elev_0 ], \
+    ['','',''] , \
+    ['Elev_R' , 'Elev_2', 'Elev_1' , 'Elev_0']
+
+if "$script_creater"=="ค่าระดับ_ครอบครับไทยร่วมสมัย๓"
+    GET_SELECTION
+    CLEAR_ENTITIES
+end
+
+var L1 = 0.4.m    # ความยาว เส้นบอกระดับ สามเหลี่ยม
+var L2 = 2.5.m    # ความยาว เส้นบอกข้อวความระดับชั้น
+var x1 = 150.mm   # ตำแหน่ง ปลายสามเหลี่ยมจิ้มลง
+var x2 = 400.mm   # ตำแหน่ง ตัวเลขค่าระดับ
+var x3 = 1200.mm  # ตำแหน่ง ข้อความชื่อ storey
+var y1 = $Elev_0 
+var y2 = $Elev_1 
+var y3 = $Elev_2
+var y4 = $Elev_R
+var fSize = 110.mm
+
+
+line 0,$y1, $L1 , $y1
+linedash $L1+100.mm ,$y1, $L1+$L2, $y1,[500.mm,70.mm]
+polygon  [($x1 , $y1) ,($x1-150.mm,$y1+200.mm), ($x1+150.mm,$y1+200.mm)], 'none'
+text $x2,$y1+30.mm, "+%.3f"%($Elev_0.to_m) , $fSize
+text $x3,$y1+30.mm, "ระดับอ้างอิง" , $fSize
+
+set y1 = $y2 
+line 0,$y1, $L1 ,  $y1
+linedash $L1+100.mm ,$y1, $L1+$L2, $y1,[500.mm,70.mm]
+polygon  [($x1 , $y1) ,($x1-150.mm,$y1+200.mm), ($x1+150.mm,$y1+200.mm)], 'none'
+text $x2,$y1+30.mm, "+%.3f"%($Elev_1.to_m) , $fSize
+text $x3,$y1+30.mm, "ระดับพื้นชั้นล่าง" , $fSize
+
+set y1 = $y3
+line 0,$y1, $L1 ,  $y1
+linedash $L1+100.mm ,$y1, $L1+$L2, $y1,[500.mm,70.mm]
+polygon  [($x1 , $y1) ,($x1-150.mm,$y1+200.mm), ($x1+150.mm,$y1+200.mm)], 'none'
+text $x2,$y1+30.mm, "+%.3f"%($Elev_1.to_m) , $fSize
+text $x3,$y1+30.mm, "ระดับพื้นชั้น 2" , $fSize
+
+set y1 = $y4
+line 0,$y1, $L1 ,  $y1
+linedash $L1+100.mm ,$y1, $L1+$L2, $y1,[500.mm,70.mm]
+polygon  [($x1 , $y1) ,($x1-150.mm,$y1+200.mm), ($x1+150.mm,$y1+200.mm)], 'none'
+text $x2,$y1+30.mm, "+%.3f"%($Elev_R.to_m) , $fSize
+text $x3,$y1+30.mm, "ระดับคานหลังคา" , $fSize
+
+# เส้นบอกระยะ
+set x1 = -500.mm
+set x2 = -1000.mm
+line $x1,-20.mm , $x1, $y4+20.mm  # เส้นดิ่ง 1
+line $x2,-20.mm , $x2, $y4+20.mm  # เส้นดิ่ง 2
+
+line $x1+300.mm , 0.mm , $x2-100.mm, 0.mm
+line $x1+300.mm , $y4 , $x2-100.mm, $y4
+line $x1+300.mm , $y3 , $x1-100.mm, $y3
+line $x1+300.mm , $y2 , $x1-100.mm, $y2
+#tick
+line  $x1-50.mm,50.mm , $x1+50.mm, -50.mm
+line  $x1-50.mm,$y2+50.mm , $x1+50.mm, $y2-50.mm
+line  $x1-50.mm,$y3+50.mm , $x1+50.mm, $y3-50.mm
+line  $x1-50.mm,$y4+50.mm , $x1+50.mm, $y4-50.mm
+
+line  $x2-50.mm,50.mm , $x2+50.mm, -50.mm
+line  $x2-50.mm,$y4+50.mm , $x2+50.mm, $y4-50.mm
+
+Text $x2-400.mm, $y3/ 2 , $Elev_R.to_s , $fSize  # ระยะรวม
+Text $x1-300.mm, $y2/ 2 , ($Elev_1-$Elev_0).to_l.to_s , $fSize  
+Text $x1-350.mm, ($y3+$y2)/ 2 , ($Elev_R-$Elev_1).to_l.to_s , $fSize
+
+dumpvar script_creater
+if '$script_creater' == ''   # ลักไก่ check nil
+   rotate [0,0,0] , [1,0,0] , 90.degrees
+   translate  -3000.mm,0,0
+end
+
+set_attribute "chakkree_tools", "type", 'STRING' , "DRAW2D"
+set_attribute "chakkree_tools", "subtype", 'STRING' , "Elevation"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "ค่าระดับ_ครอบครับไทยร่วมสมัย๓"
+set_attribute "chakkree_tools", "data", 'JSON' , \
+  '{"Elev_0": "%dmm"%($Elev_0 .to_mm.round) , \
+    "Elev_1": "%dmm"%($Elev_1 .to_mm.round) , \
+    "Elev_2": "%dmm"%($Elev_2 .to_mm.round) , \
+    "Elev_R": "%dmm"%($Elev_R .to_mm.round)  }'

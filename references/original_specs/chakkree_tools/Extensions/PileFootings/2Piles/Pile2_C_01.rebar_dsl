@@ -1,0 +1,119 @@
+definitions = Sketchup.active_model.definitions
+definitions.purge_unused
+
+sel = Sketchup.active_model.selection[0]
+creator = sel.get_attribute "chakkree_tools", "script_creater" , ""
+if creator != "ฐานรากเสาเข็ม2ต้น" then
+  puts "ไม่ได้เลือก 'ฐานรากเสาเข็ม2ต้น' "
+  exit # บังคับ error
+end
+
+data = sel.get_attribute "chakkree_tools", "data" , nil
+if data!= nil then
+   data = JSON.parse(data)
+   puts data
+   b = data['B'].to_l
+   l = data['L'].to_l
+   t = data['t'].to_l
+   cvr = data['covering'].to_l
+   pile_w = data['Dp'].to_l
+   pileNo = '%dx%d'%[pile_w.to_cm.round , pile_w.to_cm.round]
+   dp = pile_w         # ขนาดเสาเข็ม
+   n1 = data['n1']
+   dia1 = data['dia1'].to_l
+   n2 = data['n2']
+   dia2 = data['dia2'].to_l
+   nStir = data['nStir']
+   diaStir = data['diaStir'].to_l
+   factor_CC = data['factor_CC'].to_f
+   factor_CE = data['factor_CE'].to_f
+  
+   type = ""
+   creater = ""
+   # ถามข้อมูลเพิ่มเติม 
+   prompts = ['ความยาวเสาเข็ม : ']
+   defaults = [6.m]
+   list = [nil]
+   inp = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 1 ต้น')
+   if not inp then
+      puts "หยุดการทำงาน เนืองจากกดปุ่ม cancel การสร้าง PileCAP"
+      exit
+   end  
+   lenPile = inp[0]
+  
+   factorLh  = 6.0
+   factorDb  = 4.0
+   r = (factorDb / 2 + 0.5) * dia1
+   dx = cvr + r + dia1
+   s = (b - 2*dx)/(n1-1)
+   
+   mainGrp = new_group('PileCAP_F_P2')
+   set_host mainGrp
+
+   conc1 = box( 'concrete', [l, b , t])
+   conc1.material = set_material('concrete', 'Bisque', 0.3)
+   translate 'concrete' , [0  ,0,-t/2]
+   
+   # เหล็กตะแกรง ยาวตามทิศ X
+   a = (factorDb/2 + 0.5 + factorLh)* dia1
+   b1 = t-2*cvr-75.mm  - dia2
+   c =  l-2*cvr
+   dx = cvr + r + dia1
+   s = (b - 2*dx)/(n1-1)
+	 
+   grpRebarX = mainGrp.entities.add_group
+   grpRebarX.name =  "Rebar_X" 
+   set_host grpRebarX
+   rebarX = rebar( 'X', dia1 , '41', 
+             {'A'=>a,'B'=>b1,'C'=>c,'D'=>b1, 'E'=>a, 
+              'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default' )
+   translate rebarX , [-c / 2 , -b/2 +dx , - b1 - cvr - dia2]
+   rebarX = make_component rebarX
+   copy rebarX , n1 - 1 , [0, s, 0]
+   
+   # เหล็กตะแกรง ยาวตามทิศ Y
+   a = (factorDb/2 + 0.5 + factorLh)* dia2
+   b1 = t-2*cvr-75.mm - dia1
+   c =  b-2*cvr
+   dx = cvr + r + dia2
+   s = (l - 2*dx)/(n2-1)
+   
+   grpRebarY = mainGrp.entities.add_group
+   grpRebarY.name =  "Rebar_Y" 
+   set_host grpRebarY
+   rebarY = rebar( 'Y', dia2 , '41', 
+             {'A'=>a,'B'=>b1,'C'=>c,'D'=>b1, 'E'=>a, 
+              'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default' )
+   rotate rebarY, [0,0,0],[0,0,1], 90.degrees
+   translate rebarY , [ -l/2 + dx , -c / 2 , - b1 - cvr]
+   rebarY = make_component rebarY
+   copy rebarY , n2 - 1 , [s, 0, 0]
+  
+   # เหล็กรัดรอบ
+   grpStir1 = mainGrp.entities.add_group
+   grpStir1.name =  "Stir" 
+   set_host grpStir1
+   a = b - 2* cvr - 2*dia2
+   b1 = l - 2*cvr - 2*dia1
+   dz = cvr + 50.mm + diaStir
+   s = (t/2 - dz)/(nStir-1)
+   stir1 = rebar( 'stir1', diaStir  , '51' , 
+                  {'A'=>a,'B'=>b1,'C'=>'90',
+                  'factor_Db'=>4,'factor_Lh'=>6}, 'default' )
+   rotate stir1 , [0,0,0] , [0,1,0] , 90.degrees
+   translate stir1 , [0, 0 , -dz ]
+   make_component stir1    
+  
+   # เสาเข็ม 
+   pile1 =  rect_pile(dp, lenPile, 15.mm)
+   #pile1 = i_pile( pileNo , lenPile)
+   translate pile1 , [-(factor_CC*dp)/2,0, -t + 75.mm]
+   pile1 = make_component(pile1)
+   pile2 = copy(pile1, 1, [factor_CC*dp,0,0])
+  
+   mainGrp = make_component(mainGrp)  
+   tr = sel.transformation.clone
+   mainGrp.transform! tr
+else
+      puts " ไม่เจอ data ใน attribute 'chakkree_tools'"
+end

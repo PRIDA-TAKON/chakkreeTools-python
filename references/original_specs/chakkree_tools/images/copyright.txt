@@ -1,0 +1,7 @@
+ภาพ svg สำหรับทำ icon ใน toolbar ของ Extension chakkree_tools
+สงวนลิขสิทธิ์ ©2024 จักรี ติยะวงศ์สุวรรณ 
+
+
+
+ยกเว้น  Cog-scripted-svg-blue.svg
+นำมาจาก wikimedia.org

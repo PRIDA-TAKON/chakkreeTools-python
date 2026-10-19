@@ -1,0 +1,197 @@
+# draw2d_dsl
+# เสาเข็ม 3 ต้น 
+# ตัวแปร 4 ตัว ที่เป็นหลักในการกำหนดขนาดฐานราก
+
+# จองก่อน เพื่อใช้เป็นค่า default
+t = 500.mm
+cvr = 50.mm	
+dp = 180.mm
+factorDpile = 3.0
+factorEdge = 1.5
+n1 = 4
+dia1 = 12.mm
+diaStir = 9.mm
+nStir = 1
+
+sel = Sketchup.active_model.selection[0]
+if sel != nil then
+  type = sel.get_attribute "chakkree_tools" , "type"
+  creater = sel.get_attribute "chakkree_tools" , "script_creater"
+end
+select_old_footing = false
+if type=="Footing_2DTOP" and creater=='ฐานรากเสาเข็ม3ต้น' then
+   puts "OK เลือกฐานราก "
+   json = sel.get_attribute "chakkree_tools" , "data"
+   data = JSON.parse(json)
+
+   t = data['t'].to_l
+   cvr = data['covering'].to_l
+   dp = data['Dp'].to_l         # ขนาดเสาเข็ม
+   factorDpile = data['factor_CC']
+   factorEdge = data['factor_CE']
+   n1 = data['n1']
+   dia1 = data['dia1'].to_l
+   nStir = data['nStir']
+   diaStir = data['diaStir'].to_l
+   select_old_footing = true
+end
+
+prompts = ['ความหนา=','ระยะหุ้ม=' , 'ขนาดเสาเข็ม = ' ,  
+     'ตัวคูณ ศก.เข็มถึงศก.เข็ม = ','ตัวคูณ ศก.เข็มถึงขอบฐานราก = ' , 
+     'จำนวนเหล็กเสริม = ' , 'dia.เหล็กเสริม = ' , 
+     'dia.เหล็กรัดรอบ = ']
+defaults = [t, cvr, "%dmm"% dp.to_mm.round ,
+            factorDpile , factorEdge  , 
+            n1, "%dmm"% dia1.to_mm.round , 
+            "%dmm"% (diaStir.to_mm.round) ]
+list = ['','','180mm|220mm|260mm|300mm|350mm|400mm|450mm|650mm',
+        '','' ,  '3|4|5|6|7|8|9|10|12', 
+         '9mm|12mm|16mm|20mm|25mm|28mm|32mm' , '6mm|9mm|12mm'] 
+inp = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 3 ต้น')
+
+if inp then
+    t = inp[0]
+    cvr = inp[1]
+    dp = inp[2].to_l         # ขนาดเสาเข็ม
+    factorDpile = inp[3]
+    factorEdge = inp[4]
+    n1 = inp[5]
+    dia1 = inp[6].to_l
+    diaStir = inp[7].to_l
+  
+    dp3 = factorDpile*dp
+    dpEdge = factorEdge*dp
+    # ------------------------
+    # 
+
+    tan60 =  Math.tan(60.degrees)
+    gap1 = cvr+dia1+diaStir/2   # ระยะเหล็กรัดรอบ
+    gap2 = cvr+dia1/2   # ระยะเหล็กหลัก
+    _L1 = factorDpile*dp   # ระยะจาก CL เข็ม ถึง CL เข็ม
+    _L2 = factorEdge*dp  # ระยะจาก CL เข็ม ถึง  ขอบฐานราก
+
+    hTri1 = (_L1/2)*Math.tan(60.degrees)   # ความสูงสามเหลี่ยมใน
+    hTri2 = (hTri1 /3 + _L2) *3         # ความสูงสามเหลี่ยมนอก
+    hTri3 = (hTri2 /3 - gap1 ) *3         # ความสูงสามเหลี่ยมเหล็กรัดรอบ
+    hTri4 = (hTri2 /3 - gap2 ) *3         # ความสูงสามเหลี่ยมเหล็กหลัก
+  
+    _LTri2 =  2* hTri2/Math.tan(60.degrees) # ความกว้างฐานสามเหลี่ยมนอก
+    _LTri3 =  2* hTri3/Math.tan(60.degrees) # ความกว้างฐานสามเหลี่ยมเหล็กรัดรอบ
+    _LTri4 =  2* hTri4/tan60 # ความกว้างฐานสามเหลี่ยมเหล็กหลัก
+  
+    x1 = dp3/ 2
+    x4 = _LTri2 / 2
+    x7 = x4 - (dpEdge/tan60) 
+    x8 = x7 - (dpEdge/tan60)
+		x11 = dpEdge/tan60
+		x15 = _LTri3/2 - 2*(dpEdge-gap1 )/ tan60
+		x16 = _LTri3/2 -   (dpEdge-gap1 )/ tan60
+		x17 =  (dpEdge-gap1 ) / tan60
+  
+    y1 = -hTri1 /3
+    y3 = hTri1 * 2/3.0
+    y4 = -hTri2 /3
+    y6 = hTri2 * 2/3.0
+    y7 = -hTri1 /3
+    y8 = y4 
+    y11 = y6 - dpEdge
+    y15 = y8 + gap1 
+    y16 = y1
+    y17 = hTri3 *2.0/3 - (dpEdge-gap1 )
+  
+    if select_old_footing then
+       set_host sel
+       sel.entities.clear!
+    else
+       set_host new_group( "TopView_3RectPile" )
+    end
+    # center cross
+    wtC = 50.mm
+    line [-wtC , 0] , [wtC , 0]
+    line [0,-wtC],    [0  , wtC]
+  
+    wFillet = 15.mm
+    pile_section   [-x1, y1] , 'R%d'% (dp.to_mm.round) , wFillet , 'Gainsboro'
+    pile_section   [ x1, y1] , 'R%d'% (dp.to_mm.round) , wFillet , 'Gainsboro'
+    pile_section   [  0, y3] , 'R%d'% (dp.to_mm.round) , wFillet , 'Gainsboro'
+		
+    # สามเหลี่ยม วงใน
+    linedash [-x1 , y1] , [x1 , y1],[50.mm,10.mm]
+    linedash [-x1 , y1] , [0 , y3],[50.mm,10.mm]
+    linedash [ x1 , y1] , [0 , y3],[50.mm,10.mm]
+  
+    # เส้นขอบฐานราก
+    line  [-x7, y7] , [ -x11, y11]
+    line  [ x7, y7] , [  x11, y11]
+    line  [-x8, y8] , [  x8, y8]
+    # เส้นตัดขอบสามเหลี่ยมหัวฐานราก
+    line [-x11, y11] , [ x11, y11]
+    line [ x7, y7] ,  [x8, y8]
+    line [-x7, y7 ], [-x8, y8]
+    # เหล็กรัดรอบ
+    line [-x15, y15] , [ x15, y15]
+    line [-x15, y15] , [-x16, y16]
+    line [ x15, y15] , [ x16, y16]
+    line [-x16, y16] , [-x17, y17]
+    line [ x16, y16] , [ x17, y17]
+    line [-x17, y17] , [ x17, y17]
+  
+    # คำนวณ ซ้ำ แต่ใช้ตัวแปรเดิม
+    x15 = _LTri4/2 - 2*(dpEdge-gap2 )/ tan60
+    x16 = _LTri4/2 -   (dpEdge-gap2 )/ tan60
+    x17 =  (dpEdge-gap2 ) / tan60
+    y15 = y8 + gap2 
+    y16 = y1
+    y17 = hTri4 *2.0/3 - (dpEdge-gap2 )
+    # เหล็กหลัก ชุด 1 
+    gap3 = 50.mm
+    xStart =  - x15 + gap3
+    xEnd = - x17 + gap3
+    s1 = (2*x15.abs-2*gap3)/(n1-1)  # ระยะห่าง ตัวล่าง
+    s2 = (2*x17.abs-2*gap3)/(n1-1)  # ระยะห่าง ตัวบน
+    (1..n1).each{|i|
+        line [xStart  , y15] , [xEnd ,  y17]
+  			xStart = xStart  + s1
+  		  xEnd = xEnd + s2 
+    }
+    # เหล็กหลัก ชุด 2
+    xStart =  - x15 + gap3
+    xEnd = - x17 + gap3
+    cos120 =  Math.cos(2*Math::PI/3)
+    sin120 =  Math.sin(2*Math::PI/3)
+    x1d = 0; x2d = 0
+    y1d = 0; y2d = 0
+    (1..n1).each{|i|
+        x1d = xStart*cos120 - y15*sin120
+        y1d = xStart*sin120 + y15*cos120
+        x2d = xEnd*cos120 - y17*sin120
+        y2d = xEnd*sin120 + y17*cos120
+        line [x1d ,  y1d] , [ x2d , y2d] 
+        xStart = xStart  + s1
+  		  xEnd = xEnd + s2 
+    }
+    # เหล็กหลัก ชุด 3
+    xStart =  - x15 + gap3
+    xEnd = - x17 + gap3
+    cos120 =  Math.cos(-120.degrees)
+    sin120 =  Math.sin(-120.degrees)
+    (1..n1).each{|i|
+        x1d = xStart*cos120 - y15*sin120
+        y1d = xStart*sin120 + y15*cos120
+        x2d = xEnd*cos120 - y17*sin120
+        y2d =  xEnd*sin120 + y17*cos120
+        line [x1d ,  y1d] , [ x2d , y2d] 
+        xStart = xStart  + s1
+  		  xEnd = xEnd + s2 
+    }
+    fSize = 40.mm
+    dimension [-x1, y8 - 300.mm ] , dp3 , 100.mm , dp3.to_l.to_s , fSize
+    dimension [-x7 - 50.mm , y8] , dpEdge, 100.mm , 
+              dpEdge.to_l.to_s ,  fSize , 90.degrees
+    dimension [-x7 - 50.mm , y7] , hTri1/3, 100.mm , 
+              (hTri1/3).to_l.to_s ,  fSize , 90.degrees
+    dimension [-x7 - 50.mm , 0] , hTri1*2.0/3, 100.mm , 
+              (hTri1*2.0/3).to_l.to_s ,  fSize , 90.degrees
+    dimension [-x7 - 50.mm , y3] , y11-y3, 100.mm , 
+              (y11-y3).to_l.to_s ,  fSize , 90.degrees
+end

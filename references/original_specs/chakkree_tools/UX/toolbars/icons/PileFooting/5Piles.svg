@@ -1,0 +1,38 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2023 จักรี ติยะวงศ์สุวรรณ   5Piles -->
+  
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   
+   <g stroke='blue' stroke-width='1.5'  transform='translate(7.5,7.5)'>
+       <rect x='0' y='0' width='40' height='40' fill='white'/>
+
+       <rect x='6.5' y='6.5' width='7' height='7' stroke="black" fill='khaki'/>
+	   <rect x='26.5' y='6.5' width='7' height='7' stroke="black" fill='khaki'/>
+
+	   <rect x='16.5' y='16.5' width='7' height='7' stroke="black" fill='khaki'/>
+
+
+	   <rect x='6.5' y='26.5' width='7' height='7' stroke="black" fill='khaki'/>
+	   <rect x='26.5' y='26.5' width='7' height='7' stroke="black" fill='khaki'/>
+	   
+	   
+	   <line x1='-4' x2='44' y1='10' y2='10' stroke='maroon' stroke-width='0.8' 
+	      stroke-linecap="round" stroke-dasharray='5 2 1 2'/>
+	   <line x1='-4' x2='44' y1='20' y2='20' stroke='maroon' stroke-width='0.8' 
+	      stroke-linecap="round" stroke-dasharray='5 2 1 2'/>
+	   <line x1='-4' x2='44' y1='30' y2='30' stroke='maroon' stroke-width='0.8' 
+	      stroke-linecap="round" stroke-dasharray='5 2 1 2'/>
+
+	   <line x1='10' x2='10' y1='-4' y2='44' stroke='maroon' stroke-width='0.8' 
+	      stroke-linecap="round" stroke-dasharray='5 2 1 2'/>
+	   <line x1='20' x2='20' y1='-4' y2='44' stroke='maroon' stroke-width='0.8' 
+	      stroke-linecap="round" stroke-dasharray='5 2 1 2'/>
+	   <line x1='30' x2='30' y1='-4' y2='44' stroke='maroon' stroke-width='0.8' 
+	      stroke-linecap="round" stroke-dasharray='5 2 1 2'/>
+	   
+
+	   
+   </g>
+</svg>

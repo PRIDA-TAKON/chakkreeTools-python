@@ -1,0 +1,194 @@
+# TopView RectPile 2 Piles
+# -------------------------
+
+# จองก่อน เพื่อใช้เป็นค่า default
+var t = 500.mm
+var cvr = 50.mm
+var Dp = 220.mm         # ขนาดเสาเข็ม
+var n1 = 5
+var dia1 = 16.mm   # แนวนอน
+var n2 = 8
+var dia2 = 12.mm   # แนวตั้ง
+var diaStir = 9.mm
+var factorDpile = 3.0
+var factorEdge = 1.5
+var nStir =1
+
+var B = 500.mm # ตั้งไว้แก้ bug
+var L = 1000.mm # ตั้งไว้แก้ bug
+
+
+break_IfNOT "ฐานรากเสาเข็ม2ต้น"
+# ตรวจว่าเป็น "ฐานรากเสาเข็ม2ต้น"
+get_attribute "chakkree_tools", "script_creater", 'STRING'
+
+if "$script_creater"=="ฐานรากเสาเข็ม2ต้น"
+   get_attribute "chakkree_tools", "data", "JSON"
+end
+
+set t = '$t'.to_l  
+set Dp = '$Dp'.to_l  
+set dia1 = '$dia1'.to_l
+set dia2 = '$dia2'.to_l
+set diaStir = '$diaStir'.to_l
+
+# bug ที่เกิดเมื่อชื่อไม่ตรง จะคืน 0 ไป ระวัง
+if "$script_creater"=="ฐานรากเสาเข็ม2ต้น"
+    set cvr = '$covering'.to_l
+end
+
+inputbox 'ป้อนข้อมูล PileCAP เสาเข็ม 2 ต้น' , \
+   ['ความหนา =','ระยะหุ้ม=' , 'ขนาดเสาเข็ม = ', \
+      'ตัวคูณ ศก.เข็มถึงศก.เข็ม = ','ตัวคูณ ศก.เข็มถึงขอบฐานราก = ', \
+      'จำนวนเหล็กเสริมแนวนอน = ' , 'dia.เหล็กเสริมแนวนอน = ' , \
+      'จำนวนเหล็กเสริมแนวตั้ง = ' , 'dia.เหล็กเสริมแนวตั้ง = ' , \
+      'dia.เหล็กรัดรอบ = '], \
+   [ $t,  $cvr, "%dmm"%$Dp.to_mm.round , \
+       $factorDpile  , $factorEdge  , \
+       $n1 ,"%dmm"%$dia1.to_mm.round , \
+       $n2 , "%dmm"%$dia2.to_mm.round , \
+       "%dmm"%($diaStir.to_mm.round) ], \
+   ['','','180mm|220mm|260mm|300mm|350mm|400mm|450mm|650mm','','', \
+      '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , \
+      '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , \
+      '6mm|9mm|12mm' ] , \
+   [ 't' , 'cvr' , 'Dp', 'factorDpile' , 'factorEdge','n1' , 'dia1' , \
+       'n2' , 'dia2' , 'diaStir']
+
+
+if "$script_creater"=="ฐานรากเสาเข็ม2ต้น"
+    GET_SELECTION
+    CLEAR_ENTITIES
+end
+
+set Dp = '$Dp'.to_l  
+set dia1 = '$dia1'.to_l
+set dia2 = '$dia2'.to_l
+set diaStir = '$diaStir'.to_l
+
+
+var Dp_CC = $factorDpile*$Dp    # ระยะ CL เข็ม ถึง CL เข็ม
+var Dp_CE =  $factorEdge*$Dp    # ระยะ CL เข็ม ถึง ขอบฐานราก
+
+set L = $Dp_CE + $Dp_CC + $Dp_CE
+set B = $Dp_CE * 2
+
+
+var factorDb = 4.0
+var factorLh = 6.0
+# -------------------------
+var fSize = 55.mm
+# -------------------------
+set ShowRebarText = false
+
+name TopView_1RectPile
+# center cross
+var wtC = 50.mm
+line -$wtC , 0 , $wtC , 0
+line 0,-$wtC, 0  , $wtC
+
+# concrete
+rect -$L/2 , -$B/2 , $L ,$B
+
+# Main Dimension
+dim -$L/2 , $B/2+350.mm , $L , 100.mm , $L.to_l.to_s , $fSize, 0.degrees
+dim -$L/2-350.mm , -$B/2 , $B , 100.mm ,  $B.to_l.to_s  , $fSize, 90.degrees
+
+# minor dim
+dim -$L/2     , $B/2+150.mm , $Dp_CE  , 150.mm , $Dp_CE.to_l.to_s , $fSize, 0.degrees
+dim -$Dp_CC/2 , $B/2+150.mm , $Dp_CC/2 , 150.mm , ($Dp_CC/2).to_l.to_s , $fSize, 0.degrees
+dim  0        , $B/2+150.mm , $Dp_CC/2 , 150.mm , ($Dp_CC/2).to_l.to_s , $fSize, 0.degrees
+dim  $Dp_CC/2 , $B/2+150.mm , $Dp_CE   , 150.mm , ($Dp_CE).to_l.to_s , $fSize, 0.degrees
+
+dim -$L/2-150.mm , -$B/2 , $B/2 , 150.mm , ($B/2).to_l.to_s , $fSize, 90.degrees
+dim -$L/2-150.mm ,  0 , $B/2 , 150.mm , ($B/2).to_l.to_s , $fSize, 90.degrees
+
+linedash -$L/2, -$B/2-200.mm , -$L/2, $B/2+200.mm,[50.mm,10.mm]
+linedash -$Dp_CC/2, -$B/2-200.mm , -$Dp_CC/2, $B/2+200.mm,[50.mm,10.mm] 
+linedash  $Dp_CC/2, -$B/2-200.mm ,  $Dp_CC/2, $B/2+200.mm,[50.mm,10.mm] 
+linedash  $L/2, -$B/2-200.mm ,  $L/2, $B/2+200.mm,[50.mm,10.mm]
+
+linedash -$L/2-200.mm , 0, $L/2+200.mm, 0 ,[30.mm,10.mm] 
+linedash -$L/2-200.mm , -$B/2, $L/2+200.mm, -$B/2 ,[30.mm,10.mm] 
+linedash -$L/2-200.mm ,  $B/2, $L/2+200.mm,  $B/2 ,[30.mm,10.mm] 
+
+# Rect Pile
+var wFillet = 10.mm
+var x1 = $Dp_CC/2
+PileSection   $x1 , 0 , 'R%d'%($Dp.to_mm.round)
+PileSection  -$x1 , 0 , 'R%d'%($Dp.to_mm.round)
+
+
+# เหล็กปลอกรัดรอบ
+var a = $B - 2*$cvr - 2*$dia2
+var b = $L - 2*$cvr - 2*$dia1
+var c = (($factorDb+1)/2+$factorLh) * $diaStir
+var r = $factorDb/2 * $diaStir
+rebar -$L/2 + $cvr + $dia1 , $B/2 - $cvr - $dia1, '51', \
+      [$a, $b , $c  ] , $diaStir , $r,  'U' 
+
+# วง เหล็กรัดรอบ
+if  $diaStir>9.mm
+  Text -$L / 2  ,  -$B/2 - 400.mm ,  \
+     "เหล็กรัดรอบ " + $nStir.to_s  + "ชุด-"  + "DB" +  $diaStir.to_mm.round.to_s + "มม" , $fSize
+end
+if $diaStir<=9.mm
+  Text -$L / 2  ,  -$B/2 - 400.mm ,  \
+     "เหล็กรัดรอบ " + $nStir.to_s  + "ชุด-"  + "RB" +  $diaStir.to_mm.round.to_s + "มม" , $fSize
+end
+
+# เหล็กเสริมแนวนอน
+set r = ($factorDb/2 + 0.5) * $dia2
+set x1 = -$L/2 + $cvr + $diaStir + $dia1
+var y1 = $B/2 - $cvr - $dia2 - $diaStir - $r - $dia2
+rect $x1 , $y1 , 2*$x1.abs , $dia1 , 'black'
+
+if  $dia1>9.mm
+  Text $L/2 + 100.mm ,  $B/2 + 100.mm ,  \
+     $n1.to_s  + "-"  + "DB" +  $dia1.to_mm.round.to_s + "มม" , $fSize
+end
+if $dia1<=9.mm
+  Text $L/2 + 100.mm ,  $B/2 + 100.mm ,  \
+     $n1.to_s  + "-"  + "RB" +  $dia1.to_mm.round.to_s + "มม" , $fSize
+end
+
+
+# เหล็กเสริมแนวตั้ง
+set r = ($factorDb/2 + 0.5) * $dia1
+set x1 = -$L/2 + $cvr + $dia1 + $r
+set y1 = -$B/2 + $cvr + $diaStir + $dia2
+rect $x1 , $y1 , $dia2 , 2*$y1.abs , 'black'
+if  $dia2>9.mm
+  Text -$Dp_CC/2 + 100.mm , - $B/2 - 200.mm ,  \
+     $n2.to_s  + "-"  + "DB" +  $dia2.to_mm.round.to_s + "มม" , $fSize
+end
+if $dia2<=9.mm
+  Text -$Dp_CC/2 + 100.mm , - $B/2 - 200.mm ,  \
+     $n2.to_s  + "-"  + "RB" +  $dia2.to_mm.round.to_s + "มม" , $fSize
+end
+
+# ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+set_attribute "chakkree_tools", "type", 'STRING' , "Footing_2DTOP"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "ฐานรากเสาเข็ม2ต้น"
+set_attribute "chakkree_tools", "rebar_script", 'STRING' , "2Piles/Pile2_C_01.crs"
+set_attribute "chakkree_tools", "data", 'JSON' , \
+   '{"B":"%dmm"%($B.to_mm.round), \
+     "L":"%dmm"%($L.to_mm.round), \
+     "t":"%dmm"%($t.to_mm.round), \
+     "covering":"%dmm"%($cvr.to_mm.round), \
+     "Dp": "%dmm"%($Dp.to_mm.round), \
+     "n1": $n1 , "dia1":"%dmm"%($dia1.to_mm.round) , \
+     "n2": $n2 , "dia2":"%dmm"%($dia2.to_mm.round) , \
+     "nStir": $nStir , "diaStir":"%dmm"%($diaStir.to_mm.round) , \
+     "factor_CC":$factorDpile, "factor_CE":$factorEdge}'
+
+
+
+
+
+
+
+
+
+
+

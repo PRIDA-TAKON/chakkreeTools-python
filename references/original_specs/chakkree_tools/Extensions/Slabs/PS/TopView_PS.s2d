@@ -1,0 +1,55 @@
+# Draw PS slab
+
+name PS
+
+var L = 4.m     # ความยาวแผ่นพื้น
+var w = 350.mm  # ความกว้างแผ่นพิ้น
+var n = 4
+
+break_IfNOT  "แผ่นพื้นสำเร็จรูป"
+
+# ตรวจว่าเป็นของเรา ตามบรรทัดบน
+get_attribute "chakkree_tools", "script_creater", 'STRING'  
+
+# เป็น trick ในการลักไก่
+if "$script_creater"== "แผ่นพื้นสำเร็จรูป"
+   get_attribute "chakkree_tools", "data", "JSON"
+   set L= '$L'.to_l
+   set w= '$w'.to_l
+end
+
+inputbox 'กำหนดข้อมูลแผ่นพื้นสำเร็จรูป' , \
+    ['ความยาว =', 'ความกว้างต่อแผ่น = ','จำนวน = '], \
+    [ $L ,$w, $n], \
+    ['','',''] , \
+    ['L' , 'w' , 'n']
+
+if "$script_creater"=="แผ่นพื้นสำเร็จรูป"
+    GET_SELECTION
+    CLEAR_ENTITIES
+end
+
+rect  0, 0, $n*$w , $L
+var x = $w
+Repeat $n-1
+    linedash $x, 0, $x, $L,[100.mm,30.mm]
+    set x = $x + $w
+End
+
+dumpvar script_creater
+if '$script_creater' == ''   # ลักไก่ check nil
+   #rotate [0,0,0] , [1,0,0] , 90.degrees
+   #translate  -3000.mm,0,0
+end
+
+set_attribute "chakkree_tools", "type", 'STRING' , "DRAW2D"
+set_attribute "chakkree_tools", "subtype", 'STRING' , "PS"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "แผ่นพื้นสำเร็จรูป"
+set_attribute "chakkree_tools", "rebar_script", 'STRING' , "PS/PS.crs"
+
+set_attribute "chakkree_tools", "data", 'JSON' , \
+  '{"L": "%dmm"%($L.to_mm.round) , \
+    "width": "%dmm"%($w .to_mm.round) , \
+    "n": $n   }'
+
+

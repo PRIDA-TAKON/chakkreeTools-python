@@ -1,0 +1,65 @@
+# Rebar_DSL
+## แผ่นพื้น เหล็กเหล็กงอขอ ชั้นเดียว
+
+## ส่วนตัวแปร
+length = 2200.mm   # x
+width = 1200.mm    # y
+thk = 100.mm       # z
+cvr = 20.mm
+
+diaX = 9.mm
+sx = 150.mm
+diaY = 9.mm
+sy = 150.mm
+#endHook = [true,true]
+endHook = [false,false]
+
+ext_L = 150.mm
+ext_R = 150.mm
+ext_T = 150.mm
+ext_B = 150.mm
+
+color1 = 'maroon'
+color2 = 'blue'
+
+## ส่วนเริ่มสร้าง
+set_host  new_group("Slab")
+conc1 = box 'concrete' , [length, width , thk]
+conc1.material = set_material('concrete', 'Bisque', 0.3)
+translate conc1, [length/2, width/2,-thk/2]
+
+dz_x = -thk + cvr + diaX/2
+dz_y = -thk + cvr + diaX + diaY/2
+if width<length then
+  tmp = dz_x
+  dz_x = dz_y
+  dz_y = tmp
+end
+
+## เหล็กทิศ X เหล็กนอน
+rebarX = rebar 'RebarX' , diaX , '00' , 
+   {'A'=>length + ext_L + ext_R ,  'end_hook'=>endHook}, color1
+nx = (width/sx).to_i
+gap = (width-sx*nx)/2
+if gap<1.mm
+  nx -= 1
+  gap = (width-sx*nx)/2
+end
+translate rebarX, [-ext_L, gap , dz_x]
+rebarX = make_component 'RebarX' 
+copy rebarX, nx , [0,sx,0]
+
+## เหล็กทิศ y เหล็กตั้ง
+rebarY = rebar 'RebarY' , diaY , '00' , 
+   {'A'=>width + ext_T + ext_B ,  'end_hook'=>endHook}, color2
+rotate rebarY, [0,0,0] , [0,0,1] , 90.degrees
+ny = (length/sy).to_i
+gap = (length-sy*ny)/2
+if gap<1.mm
+  ny -= 1
+  gap = (length-sy*ny)/2
+end
+translate rebarY, [gap ,-ext_B,  dz_y]
+rebarY = make_component 'RebarY' 
+copy rebarY, ny , [sy,0,0]
+## Done

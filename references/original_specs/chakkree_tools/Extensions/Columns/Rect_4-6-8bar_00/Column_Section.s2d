@@ -1,0 +1,108 @@
+# จองก่อน เพื่อใช้เป็นค่า default
+var b = 200.mm
+var t = 200.mm
+var cvr = 25.mm
+var dia1 = 12.mm
+var diaStir = 6.mm
+var s = 150.mm
+var n1 = 4
+
+break_IfNOT "หน้าตัดเสาสี่เหลี่ยมแบบ0"
+
+# ตรวจว่าเป็น "หน้าตัดเสาสี่เหลี่ยมแบบ0"
+get_attribute "chakkree_tools", "script_creater", 'STRING'  
+
+
+# เป็น trick ในการลักไก่
+if "$script_creater"=="หน้าตัดเสาสี่เหลี่ยมแบบ0"
+   get_attribute "chakkree_tools", "data", "JSON"
+   set b = '$b'.to_l
+   set t = '$t'.to_l
+   set dia1 = '$dia1'.to_l
+   set diaStir = '$diaStir'.to_l
+   set cvr = '$covering'.to_l
+   set s = '$spacing'.to_l
+end
+
+# bug ที่เกิดเมื่อชื่อไม่ตรง จะคืน 0 ไป ระวัง
+
+inputbox 'ป้อนค่าวาดหน้าตัดเสาสี่เหลี่ยมแบบพื้นฐาน', \
+   ['b = ' , 't = ' , 'ระยะหุ้ม=' , \
+     'จำนวนเหล็กยืน = ','dia.เหล็กยืน = ' , \
+     'dia.เหล็กปลอก = ' , 'ระยะห่างเหล็กปลอก = ' ] , \
+   [$b , $t , $cvr ,  \
+     $n1 ,"%dmm"%($dia1).to_mm.round , \
+     "%dmm"%($diaStir).to_mm.round, $s] , \
+   ['','', '', '4|6|8','12mm|16mm|20mm|25mm|28mm|32mm' , '6mm|9mm' , ''] , \
+   ['b' , 't', 'cvr' , 'n1' , 'dia1' , 'diaStir' , 's']
+
+if "$script_creater"=="หน้าตัดเสาสี่เหลี่ยมแบบ0"
+    GET_SELECTION
+    CLEAR_ENTITIES
+end
+
+
+#dumpvar x
+#dumpvar cvr
+#dumpvar dia1
+
+set dia1 = '$dia1'.to_l            # ลักไก่ myEval มีปัญหากับ string
+set diaStir = '$diaStir'.to_l      # ลักไก่ myEval มีปัญหากับ string
+set n1 = $n1
+var fSize = 35.mm
+
+rect -$b/2 , -$t/2 , $b ,$t
+
+dim -$b/2 , $t/2 + 50.mm , $b , 100.mm , $b.to_s , $fSize, 0.degrees
+dim -$b/2 - 50.mm , -$t/2 , $t , 100.mm , $t.to_s , $fSize, 90.degrees
+
+var x1 = $b/2 - $cvr 
+var y1 = $t/2 - $cvr 
+var s1 = (2*$x1)/3
+dumpvar cvr
+
+RoundRect  -$x1, -$y1, 2*$x1 , 2*$y1 , 2*$diaStir 
+
+#RoundRect  -$x1+$s1-$dia1/2, -$y1, 2*$x1-2*$s1+$dia1*2 , 2*$y1 , 2*$diaStir 
+
+set x1 = $x1  - $dia1/2
+set y1 = $y1  - $dia1/2
+
+# เหล็กยืน 4 มุม
+circle   $x1 - $dia1/2 ,$y1 -$dia1/2 , $dia1/2 , 'black' , 12
+circle - $x1+ $dia1/2 ,$y1 -$dia1/2, $dia1/2 , 'black' , 12
+circle   $x1 - $dia1/2 , -$y1 +$dia1/2 , $dia1/2 , 'black' , 12
+circle - $x1+ $dia1/2 , - $y1 +$dia1/2, $dia1/2 , 'black' , 12
+
+
+# เหล็กบน ล่าง
+if $n1==6 or $n1==8
+   circle   0 ,$y1 - $dia1 / 2   , $dia1 / 2 , 'black' , 12
+   circle   0 , -$y1 + $dia1 / 2   , $dia1 / 2 , 'black' , 12
+end
+# เหล็ก ซ้าย ขวา
+if $n1==8
+   circle   $x1 - $dia1/2  , 0  , $dia1 / 2 , 'black' , 12
+   circle   - $x1 + $dia1/2  , 0  , $dia1 / 2 , 'black' , 12
+end
+
+text $b/2 + 50.mm ,   $fSize*1.2 ,  \
+  $n1.to_s + "-DB" + $dia1.to_mm.round.to_s + "มม"  , $fSize
+
+if $n1==6 or $n1==4
+   text $b/2 + 50.mm , - $fSize , "ป-RB" + $diaStir.to_mm.round.to_s + "มม @" +   $s.to_mm.round.to_s + "มม" , $fSize
+end
+if $n1 == 8
+   text $b/2 + 50.mm , - $fSize , "2ป-RB" + $diaStir.to_mm.round.to_s + "มม @" +   $s.to_mm.round.to_s + "มม" , $fSize
+end
+
+# ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+set_attribute "chakkree_tools", "type", 'STRING' , "Column_2DTOP"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "หน้าตัดเสาสี่เหลี่ยมแบบ0"
+set_attribute "chakkree_tools", "rebar_script", 'STRING' , "Rect_4-6-8bar_00/Rect_8bar_00.crs"
+set_attribute "chakkree_tools", "data", 'JSON' , \
+   '{"b":"%dmm"%($b.to_mm.round), \
+     "t":"%dmm"%($t.to_mm.round), \
+     "covering":"%dmm"%($cvr.to_mm.round), \
+     "n1": $n1 , "dia1":"%dmm"%($dia1.to_mm.round) , \
+     "spacing": "%dmm"%($s.to_mm.round), "diaStir":"%dmm"%($diaStir.to_mm.round)  }'

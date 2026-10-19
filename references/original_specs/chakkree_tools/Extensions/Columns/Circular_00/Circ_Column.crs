@@ -1,0 +1,55 @@
+# เสา สี่เหลี่่ยม เหล็กยืน 8 เส้น 
+
+CheckCreator "chakkree_tools","หน้าตัดเสากลมแบบ0"
+get_attribute "chakkree_tools", "data", 'JSON' 
+
+inputbox 'ป้อนค่าสร้างเสา 3D', \
+   ["ความสูงเสา = " , "ระยะยื่นเหล็กเสริมด้านบน = " ,  \
+                 "ระยะยื่นเหล็กเสริมด้านล่าง = "], \
+   [1000.mm , 300.mm  , 200.mm  ] , \
+   ["","" ,""] , \
+   ['h', 'ext_top' , 'ext_bttm']
+
+set d = '$d'.to_l
+#set t = '$t'.to_l
+set dia = '$dia'.to_l
+set diaStir  = '$diaStir'.to_l
+var s = '$spacing'.to_l
+var cvr = '$covering'.to_l
+
+
+# concrete
+Cylinder 'concrete' , [$d,$h] ,['concrete','Bisque',0.3]
+$Translate 'concrete' , [0,0,$h/2]
+
+var a1 = 300.mm - $dia/2
+var b1 = 0
+var z1 = -$ext_bttm + $dia/2
+var r = $d/2 - $cvr - $diaStir - $dia/2
+var dx = 0
+var dy = 0
+# เหล็กยืน มุม ๆ
+var angle = 360.0/($n)
+var i = 1
+var iAngle = 0
+repeat $n
+   dumpvar i
+   set iAngle = ($i-1) * $angle
+   set dx = $r * Math.cos($iAngle.degrees )
+   set dy = $r * Math.sin($iAngle.degrees )
+
+   rebar 'M%d'%($i+1), $dia , 99 , \
+      [($a1,0,$z1),(0,0,$z1), (0,0,+$h+$ext_top) ], default
+   rotate 'M%d'%($i+1) , [0,0,0] , [0,0,1] , $iAngle
+   translate 'M%d'%($i+1),[$dx , $dy , 0]
+   set i = $i+1
+end
+
+set nArc = 15
+var nStir = ($ext_bttm + $h)/$s
+rebar 'stir1', $diaStir , 77 , [$d - 2*$cvr, $s , $nStir] , default
+tran 'stir1', [0,0, -$ext_bttm + 50.mm] 
+
+#rebar 'stir1', $diaStir , 51 , [$b1, $a1 , 135] , default , $nStir , $s
+#rot 'stir1',[0,0,0],[0,1,0] , -90.degrees
+

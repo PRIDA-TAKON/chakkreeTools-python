@@ -1,0 +1,167 @@
+# เสาเข็ม 3 ต้น 
+# ตัวแปร 4 ตัว ที่เป็นหลักในการกำหนดขนาดฐานราก
+
+CheckCreator "chakkree_tools",'ฐานรากเสาเข็ม3ต้น'
+get_attribute "chakkree_tools", "data", 'JSON' 
+
+
+set Dp = '$Dp'.to_l
+set t = '$t'.to_l
+var cvr = '$covering'.to_l
+set dia1 = '$dia1'.to_l
+set diaStir = '$diaStir'.to_l
+
+var factor_Dp3 = $factor_CC
+var factor_DpEdge = $factor_CE
+
+var Dp3 = $factor_Dp3*$Dp
+var DpEdge = $factor_DpEdge*$Dp
+
+# concrete
+Triangular 'concrete' , [$Dp,  $factor_CC , $factor_CE , $t]  ,['concrete','Bisque',0.5]
+translate 'concrete' , [0,0,-$t/2]
+Make_Component 'concrete'        # มาใหม่ v0.2.15+
+
+# ------------------------
+
+var tan60 =  Math.tan(60.degrees)
+var gap1 = $cvr+$dia1+$diaStir/2   # ระยะเหล็กรัดรอบ
+var gap2 = $cvr+$dia1/2   # ระยะเหล็กหลัก
+var L1 = $factor_Dp3*$Dp   # ระยะจาก CL เข็ม ถึง CL เข็ม
+var L2 = $factor_DpEdge*$Dp  # ระยะจาก CL เข็ม ถึง  ขอบฐานราก
+
+var hTri1 = ($L1/2)*Math.tan(60.degrees)   # ความสูงสามเหลี่ยมใน
+var hTri2 = ($hTri1 /3 + $L2) *3         # ความสูงสามเหลี่ยมนอก
+var hTri3 = ($hTri2 /3 - $gap1 ) *3         # ความสูงสามเหลี่ยมเหล็กรัดรอบ
+var hTri4 = ($hTri2 /3 - $gap2 ) *3         # ความสูงสามเหลี่ยมเหล็กหลัก
+
+var LTri3 =  2* $hTri3/Math.tan(60.degrees) # ความกว้างฐานสามเหลี่ยมเหล็กรัดรอบ
+var LTri4 =  2* $hTri4/$tan60 # ความกว้างฐานสามเหลี่ยมเหล็กหลัก
+
+var x15 = $LTri3/2 - 2*($DpEdge-$gap1 )/ $tan60
+var x16 = $LTri3/2 -   ($DpEdge-$gap1 )/ $tan60
+var x17 =  ($DpEdge-$gap1 ) / $tan60
+
+var y15 = -$hTri2 /3 + $gap1 
+var y16 = -$hTri1 /3
+var y17 = $hTri3 *2.0/3 - ($DpEdge-$gap1 )
+
+# เหล็กรัดรอบ
+
+var Lh = 120.mm
+var dx = $Lh * Math.cos(60.degrees)
+var dy = $Lh * Math.sin(60.degrees)
+Rebar "Stir1" , $diaStir, 99 , \
+ [ (-$x15-$dx,$y15+$dy,0) , \
+   (-$x15,$y15,0,0),  \
+   ( $x15,$y15,0,0),  \
+   ( $x16,$y16,0,0),  \
+   ( $x17,$y17,0,0),  \
+   (-$x17,$y17,0,0),  \
+   (-$x16,$y16, -$diaStir*1.5),  \
+   (-$x15,$y15,-$diaStir*1.5),  \
+   (-$x15+$Lh,$y15,-$diaStir*1.5)  \
+], default 
+translate "Stir1" , [0,0,-$cvr-50.mm]
+Make_Component 'Stir1'        # มาใหม่ v0.2.15+
+
+# คำนวณ ซ้ำ แต่ใช้ตัวแปรเดิม
+set x15 = $LTri4/2 - 2*($DpEdge-$gap2 )/ $tan60
+set x16 = $LTri4/2 -   ($DpEdge-$gap2 )/ $tan60
+set x17 =  ($DpEdge-$gap2 ) / $tan60
+set y15 = -$hTri2 /3 + $gap2 
+set y16 = -$hTri1 /3
+set y17 = $hTri4 *2.0/3 - ($DpEdge-$gap2 )
+
+# เหล็กหลัก ชุด 1 
+var gap3 = 50.mm
+var xStart =  - $x15 + $gap3
+var xEnd = - $x17 + $gap3
+var s1 = (2*$x15.abs-2*$gap3)/($n1-1)  # ระยะห่าง ตัวล่าง
+var s2 = (2*$x17.abs-2*$gap3)/($n1-1)  # ระยะห่าง ตัวบน
+var z1 = -$t+$cvr+$dia1/2
+var z2 = -$cvr
+var i = 1   # "Main1_%d"%$i
+repeat $n1
+   Rebar "Main1_"+$i.to_s , $dia1, 99 , \
+     [ ($xStart , $y15,$z2) , \
+       ($xStart , $y15,$z1),  \
+       ($xEnd   , $y17,$z1),  \
+       ($xEnd   , $y17,$z2)  \
+     ], default 
+   set xStart = $xStart  + $s1 
+   set xEnd = $xEnd + $s2 
+   Make_Component "Main1_"+$i.to_s       # มาใหม่ v0.2.15+
+end
+
+# เหล็กหลัก ชุด 2
+set z1 = $z1 + $dia1
+set xStart =  - $x15 + $gap3
+set xEnd = - $x17 + $gap3
+var cos120 =  Math.cos(120.degrees)
+var sin120 =  Math.sin(120.degrees)
+var x1d = 0
+var x2d = 0
+var y1d = 0
+var y2d = 0
+repeat $n1  # เหล็กหลัก ชุด 2
+   set x1d = $xStart*$cos120 - $y15*$sin120
+   set y1d = $xStart*$sin120 + $y15*$cos120
+   set x2d = $xEnd*$cos120 - $y17*$sin120
+   set y2d =  $xEnd*$sin120 + $y17*$cos120
+   Rebar "Main2_"+$i.to_s , $dia1, 99 , \
+     [ ($x1d , $y1d ,$z2) , \
+       ($x1d , $y1d,$z1),  \
+       ($x2d , $y2d,$z1),  \
+       ($x2d , $y2d,$z2)  \
+     ], default 
+   set xStart = $xStart  + $s1 
+   set xEnd = $xEnd + $s2 
+   Make_Component "Main2_"+$i.to_s       # มาใหม่ v0.2.15+
+end
+
+# เหล็กหลัก ชุด 3
+set z1 = $z1 + $dia1
+set xStart =  - $x15 + $gap3
+set xEnd = - $x17 + $gap3
+set cos120 =  Math.cos(-120.degrees)
+set sin120 =  Math.sin(-120.degrees)
+set x1d = 0
+set x2d = 0
+set y1d = 0
+set y2d = 0
+repeat $n1  # เหล็กหลัก ชุด 3
+   set x1d = $xStart*$cos120 - $y15*$sin120
+   set y1d = $xStart*$sin120 + $y15*$cos120
+   set x2d = $xEnd*$cos120 - $y17*$sin120
+   set y2d =  $xEnd*$sin120 + $y17*$cos120
+   Rebar "Main3_"+$i.to_s , $dia1, 99 , \
+     [ ($x1d , $y1d ,$z2) , \
+       ($x1d , $y1d,$z1),  \
+       ($x2d , $y2d,$z1),  \
+       ($x2d , $y2d,$z2)  \
+     ], default 
+   set xStart = $xStart  + $s1 
+   set xEnd = $xEnd + $s2
+   Make_Component "Main3_"+$i.to_s       # มาใหม่ v0.2.15+
+end
+
+
+#  เสาเข็ม v0.2.15+
+var lenPile = 6.m
+
+Pile 'Rect_Pile1' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile1' , [0,$Dp3*2.0/3, -$t+50.mm]
+Make_Component "Rect_Pile1"      # มาใหม่ v0.2.15+
+
+copy "Rect_Pile1", 1 , [-$Dp3/2 , -$Dp3 , 0]
+copy "Rect_Pile1", 1 , [+$Dp3/2 , -$Dp3 , 0]
+
+#Pile 'Rect_Pile2' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+#tran 'Rect_Pile2' , [-$Dp3/2,-$Dp3/3, -$t+50.mm]
+
+#Pile 'Rect_Pile3' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+#tran 'Rect_Pile3' , [+$Dp3/2,-$Dp3/3, -$t+50.mm]
+
+
+set_rotation_same_selected

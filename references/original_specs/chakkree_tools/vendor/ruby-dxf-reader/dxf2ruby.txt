@@ -1,0 +1,5 @@
+dxf2ruby.rb ได้มาจาก 
+https://github.com/jimfoltz/ruby-dxf-reader
+เป็น LGPL-2.1 license
+
+นำมาใช้โดยไม่ได้ดัดแปลง dxf2ruby.rb

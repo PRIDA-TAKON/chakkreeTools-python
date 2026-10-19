@@ -1,0 +1,28 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  <defs>
+    <filter id="f2" x="0" y="0" width="140%" height="130%">
+        <feOffset result="offOut" in="SourceGraphic" dx="1" dy="1" />
+        <feGaussianBlur result="blurOut" in="offOut" stdDeviation="2" />
+        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+    </filter>
+  </defs>
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   
+   <g transform='translate(10,10)'>
+      <rect x='0' y='0' width="35" height="35" stroke='black' fill='#DCDCDC'/>
+	  <path  d='M 14 10 l -5 -5 q -4 0 -4 4 v 17 q 0 4 4 4
+	            h 17 q 4 0 4 -4 v -17 q 0 -4 -4 -4
+				h -17 q -4 0 -4 4 l 5 5' stroke='green' fill='none'/>
+      <circle cx='8' cy='8' r='2' fill='red' stroke='none'/>
+      <circle cx='8' cy='27' r='2' fill='red' stroke='none'/>
+      <circle cx='27' cy='27' r='2' fill='red' stroke='none'/>
+      <circle cx='27' cy='8' r='2' fill='red' stroke='none'/>
+	  
+      <circle cx='8' cy='17.5' r='2' fill='red' stroke='none'/>
+      <circle cx='27' cy='17.5' r='2' fill='red' stroke='none'/>
+   </g>
+  
+</svg>

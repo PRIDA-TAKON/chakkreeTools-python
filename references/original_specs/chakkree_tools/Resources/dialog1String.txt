@@ -1,0 +1,7 @@
+'มนมุม|ไม่มนมุม'
+'2|3|4|6|8|10' 
+nil
+nil
+'Red|Green|Blue|White|Yellow|Gold|Pink|Orange|Magenta|Maroon|Brown|Cyan|DarkGray' 
+ 'ลบ|ไม่ลบ' 
+ 'ลบ|ไม่ลบ'

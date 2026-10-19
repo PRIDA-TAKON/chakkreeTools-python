@@ -1,0 +1,43 @@
+# ฐานรากจตุรัส เหล็กเสริม แบบ 1 งอขอ
+
+
+length = 1.m # ระยะแกน x
+width = length # ระยะแกน y
+depth = 300.mm 
+cvr = 75.mm
+
+n1 = 5
+dia1 = 12.mm
+n2 = n1
+dia2 = dia1
+
+
+set_host new_group( "Footing_Sqr_Type1" )
+
+# คอนกรีต
+conc1 = box( 'concrete', [length, width , depth])
+conc1.material = set_material('concrete', 'Bisque', 0.3)
+translate 'concrete' , [0  ,0,depth/2]
+make_component 'concrete'
+
+# เหล็กเสริม ทิศ X
+factorLh  = 6.0
+factorDb  = 4.0
+
+a = length - 2*cvr
+r = (factorDb/2+0.5)*dia1
+span1 = width - 2*cvr - 2*r - 50.mm
+s = span1/(n1-1)
+rebar('rebar_1' , dia1 , '00', 
+   {'A'=>a, 'end_hook'=>[true,true] , 
+    'factor_Db'=>factorDb,'factor_Lh'=>factorLh} , 'default' )
+
+translate 'rebar_1',[-a/2 , -span1/2 , cvr]
+make_component 'rebar_1'
+copy 'rebar_1', n1 - 1 , [0, s, 0] 
+
+rebar_y = copy 'rebar_1',  1 , [0, 0, 0] 
+translate rebar_y,[+a/2 , +span1/2 , dia1]
+rotate rebar_y, [0,0,0], Z_AXIS, 90.degrees
+translate rebar_y,[ -span1/2 ,-a/2   , 0]
+copy rebar_y, n1 - 1 , [s, 0, 0] 

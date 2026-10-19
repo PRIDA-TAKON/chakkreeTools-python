@@ -1,0 +1,3 @@
+XXX_SimpleBeam เป็นไฟล์เปล่าไม่ได้สร้างอะไรเอาไว้
+
+xxx_DrawArchUtility น่าจะย้ายไปเป็น sniplet ใน Draw2Dผมใช้โปรแกรม SUTstructor วิเคราะห์โครงถัก ผลลัพธ์ ของแรงในชิ้นส่วนมีทศนิยม 2 ตำ_Script แทน

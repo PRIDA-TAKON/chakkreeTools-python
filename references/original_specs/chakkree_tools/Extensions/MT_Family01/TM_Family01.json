@@ -1,0 +1,25 @@
+{
+	"units":{
+		"length":"milimeter"
+	},
+	"Grids":{
+		"GridX":{
+			"1":{"position":0},
+			"2":{"position":4000},
+			"3":{"position":8000},
+		},
+		"GridY":{
+			"A'":{"position":-1500,"type":"minor"},
+			"A":{"position":0},
+			"B":{"position":3500},
+			"C":{"position":5500},
+			"D":{"position":9500},
+		}
+	},
+	"Storeys":{
+		"Footing":{"label":"ระดับฐานราก","value":-1000},
+		"Ground":{"label":"ระดับอ้างอิง","value":0},
+		"Floor1":{"label":"ระดับพื้นชั้นล่าง","value":600},
+		"Roof":{"label":"ระดับคานหล้งคา","value":3750}
+	}
+}

@@ -1,0 +1,120 @@
+# เคลียร์ component ที่ไม่มี instance ทิ้ง
+definitions = Sketchup.active_model.definitions
+definitions.purge_unused
+
+
+sel = Sketchup.active_model.selection[0]
+type = ""
+creater = ""
+if sel!= nil then
+   type = sel.get_attribute "chakkree_tools" , "type"
+   creater = sel.get_attribute "chakkree_tools" , "script_creater"
+end
+if not(type=="Footing_2DTOP" and creater=='ฐานรากเสาเข็ม2ต้น') then
+   puts "ไม่ได้เลือก ภาพ 2D ฐานรากเสาเข็ม 2 ต้น"
+   exit 
+end
+
+
+# ถามข้อมูลเพิ่มเติม 
+prompts = ['ความยาวเสาเข็ม : ']
+defaults = [6.m]
+list = [nil]
+inp = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 1 ต้น')
+if not inp then
+   puts "หยุดการทำงาน เนืองจากกดปุ่ม cancel การสร้าง PileCAP"
+   exit
+end  
+lenPile = inp[0]
+
+
+
+data = sel.get_attribute "chakkree_tools", "data"
+data = JSON.parse(data)
+
+b = data['B'].to_l
+l = data['L'].to_l
+t = data['t'].to_l
+cvr = data['covering'].to_l
+pile_type = data['pile_type']
+pile_embed = data['pile_embed'].to_l
+dp = data['Dp'].to_l         # ขนาดเสาเข็ม
+
+n1 = data['n1']
+dia1 = data['dia1'].to_l
+n2 = data['n2']
+dia2 = data['dia2'].to_l
+nStir = data['nStir']
+diaStir = data['diaStir'].to_l
+factor_CC = data['factor_CC']
+factor_CE = data['factor_CE']
+
+factorLh  = 6.0
+factorDb  = 4.0
+# -----------------------
+grp = new_group "TwoPilesCap"
+set_host grp
+# ย้ายตำแหน่งตาม selection
+grp.transformation = sel.transformation
+
+# concrete
+mat1 = set_material('concrete', 'Bisque', 0.3)
+concrete = box 'concrete' , [l,b,t] ,mat1
+translate 'concrete' , [0,0,-t/2]
+make_component concrete 
+
+# เหล็กตะกร้อ X
+r = (factorDb / 2 + 0.5) * dia1
+gap = cvr + r + dia2
+s = (b - 2*gap)/(n1-1)
+
+a1 = ((factorDb / 2 + 0.5) + factorLh )  * dia1
+b1 = t - 2* cvr -dia1 - dia2 - pile_embed
+c1 = l - 2* cvr - dia1
+
+rebar1 = rebar 'Main1', dia1 , '41' , 
+            {'A'=>a1,'B'=>b1,'C'=>c1,'D'=>b1, 'E'=>a1, 
+             'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default'
+translate rebar1 , [-c1/2-dia1/2 , -(b-2*gap)/2 , - t + dia1 + pile_embed +cvr  ]
+rebar1 = make_component rebar1    
+copy rebar1 ,  n1 - 1 , [0, s , 0] 
+
+# เหล็กตะกร้อ Y 
+gap = cvr + r + dia1
+s = (l - 2*gap)/(n2-1)
+a1 = ((factorDb / 2 + 0.5) + factorLh  )  * dia2
+b1 = b1
+c1 = b - 2* cvr - dia2
+rebar2 = rebar 'Main2', dia2 , '41' ,
+               {'A'=>a1,'B'=>b1,'C'=>c1,'D'=>b1, 'E'=>a1, 
+               'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default'
+rotate rebar2 , [0,0,0], [0,0,1], 90.degrees
+translate rebar2 , [ -(l-2*gap)/2 , -c1/2 - dia2/2 , +dia2 -t + pile_embed + cvr + dia1] #  + cvr + dia1
+rebar2 = make_component rebar2  
+copy rebar2,  n2 - 1 , [s, 0 , 0] 
+
+# เหล็กปลอก
+a1 = b - 2* cvr - 2 * dia2
+b1 = l - 2* cvr - 2 * dia1
+stir = rebar 'stir', diaStir  , '51' , 
+         {'A'=>a1,'B'=>b1,'C'=>'90', 
+          'factor_Db'=>factorDb,'factor_Lh'=>12}, 'default'
+rotate stir, [0,0,0] , [0,1,0] , 90.degrees
+translate stir, [0, 0 , -cvr - dia1 - dia2 - 20.mm ]
+stir = make_component stir     
+
+#  เสาเข็ม 
+#lenPile = 6.m
+pile1 = nil
+if pile_type.upcase == "RECT" then
+    pile1 =  rect_pile(dp, lenPile, 15.mm)
+elsif pile_type.upcase == "I" then
+    size = "%dx%d" % [dp.to_cm, dp.to_cm]
+    pile1 =  i_pile(size, lenPile, 15.mm)
+end
+pile1 = make_component pile1
+pile1.name = "RectPile_%d" %(dp.to_mm.round)
+translate pile1, [-factor_CC*dp/2,0, -t+pile_embed]
+copy pile1 , 1 , [factor_CC*dp,0, 0] 
+
+puts "เสร็จแล้ว"

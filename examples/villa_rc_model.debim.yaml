@@ -1,0 +1,500 @@
+schema: IFC4-Minimal
+project:
+  name: Modern Villa RC - Chakkree Tools
+  units: m
+grids:
+  axes_x:
+    '1': 0.0
+    '2': 4.0
+    '3': 8.0
+  axes_y:
+    A: 0.0
+    B: 5.0
+storeys:
+- id: ST_01
+  name: Level 1
+  elevation: 0.0
+  height: 3.5
+elements:
+- id: F1_1A
+  class: IfcFooting
+  storey: ST_01
+  tag: S-FOOTING
+  footing_type: PILE_CAP
+  dimensions:
+    width: 0.66
+    length: 1.32
+    thickness: 0.6
+  placement:
+    offset_z: -0.7
+  rebar:
+    grid_x: 5DB16
+    grid_y: 5DB16
+    covering: 0.07
+  qto:
+    concrete_m3: 0.523
+    formwork_m2: 2.376
+    lean_concrete_m3: 0.065
+    sand_bedding_m3: 0.131
+  pile_spec:
+    count: 2
+    type: I_PILE
+    size_m: 0.22
+    length_m: 6.0
+- id: F1_2A
+  class: IfcFooting
+  storey: ST_01
+  tag: S-FOOTING
+  footing_type: PILE_CAP
+  dimensions:
+    width: 0.66
+    length: 1.32
+    thickness: 0.6
+  placement:
+    offset_z: -0.7
+  rebar:
+    grid_x: 5DB16
+    grid_y: 5DB16
+    covering: 0.07
+  qto:
+    concrete_m3: 0.523
+    formwork_m2: 2.376
+    lean_concrete_m3: 0.065
+    sand_bedding_m3: 0.131
+  pile_spec:
+    count: 2
+    type: I_PILE
+    size_m: 0.22
+    length_m: 6.0
+- id: F1_3A
+  class: IfcFooting
+  storey: ST_01
+  tag: S-FOOTING
+  footing_type: PILE_CAP
+  dimensions:
+    width: 0.66
+    length: 1.32
+    thickness: 0.6
+  placement:
+    offset_z: -0.7
+  rebar:
+    grid_x: 5DB16
+    grid_y: 5DB16
+    covering: 0.07
+  qto:
+    concrete_m3: 0.523
+    formwork_m2: 2.376
+    lean_concrete_m3: 0.065
+    sand_bedding_m3: 0.131
+  pile_spec:
+    count: 2
+    type: I_PILE
+    size_m: 0.22
+    length_m: 6.0
+- id: F1_1B
+  class: IfcFooting
+  storey: ST_01
+  tag: S-FOOTING
+  footing_type: PILE_CAP
+  dimensions:
+    width: 0.66
+    length: 1.32
+    thickness: 0.6
+  placement:
+    offset_z: -0.7
+  rebar:
+    grid_x: 5DB16
+    grid_y: 5DB16
+    covering: 0.07
+  qto:
+    concrete_m3: 0.523
+    formwork_m2: 2.376
+    lean_concrete_m3: 0.065
+    sand_bedding_m3: 0.131
+  pile_spec:
+    count: 2
+    type: I_PILE
+    size_m: 0.22
+    length_m: 6.0
+- id: F1_2B
+  class: IfcFooting
+  storey: ST_01
+  tag: S-FOOTING
+  footing_type: PILE_CAP
+  dimensions:
+    width: 0.66
+    length: 1.32
+    thickness: 0.6
+  placement:
+    offset_z: -0.7
+  rebar:
+    grid_x: 5DB16
+    grid_y: 5DB16
+    covering: 0.07
+  qto:
+    concrete_m3: 0.523
+    formwork_m2: 2.376
+    lean_concrete_m3: 0.065
+    sand_bedding_m3: 0.131
+  pile_spec:
+    count: 2
+    type: I_PILE
+    size_m: 0.22
+    length_m: 6.0
+- id: F1_3B
+  class: IfcFooting
+  storey: ST_01
+  tag: S-FOOTING
+  footing_type: PILE_CAP
+  dimensions:
+    width: 0.66
+    length: 1.32
+    thickness: 0.6
+  placement:
+    offset_z: -0.7
+  rebar:
+    grid_x: 5DB16
+    grid_y: 5DB16
+    covering: 0.07
+  qto:
+    concrete_m3: 0.523
+    formwork_m2: 2.376
+    lean_concrete_m3: 0.065
+    sand_bedding_m3: 0.131
+  pile_spec:
+    count: 2
+    type: I_PILE
+    size_m: 0.22
+    length_m: 6.0
+- id: C1_1A
+  class: IfcColumn
+  storey: ST_01
+  tag: S-COLS
+  profile: RECTANGULAR
+  dimensions:
+    width: 0.3
+    depth: 0.3
+  height: 3.5
+  rebar:
+    main_bars: 8DB16
+    stirrups: RB9@0.15
+    covering: 0.03
+  qto:
+    concrete_m3: 0.315
+    formwork_m2: 4.2
+  placement:
+    grid:
+    - '1'
+    - A
+- id: C1_2A
+  class: IfcColumn
+  storey: ST_01
+  tag: S-COLS
+  profile: RECTANGULAR
+  dimensions:
+    width: 0.3
+    depth: 0.3
+  height: 3.5
+  rebar:
+    main_bars: 8DB16
+    stirrups: RB9@0.15
+    covering: 0.03
+  qto:
+    concrete_m3: 0.315
+    formwork_m2: 4.2
+  placement:
+    grid:
+    - '2'
+    - A
+- id: C1_3A
+  class: IfcColumn
+  storey: ST_01
+  tag: S-COLS
+  profile: RECTANGULAR
+  dimensions:
+    width: 0.3
+    depth: 0.3
+  height: 3.5
+  rebar:
+    main_bars: 8DB16
+    stirrups: RB9@0.15
+    covering: 0.03
+  qto:
+    concrete_m3: 0.315
+    formwork_m2: 4.2
+  placement:
+    grid:
+    - '3'
+    - A
+- id: C1_1B
+  class: IfcColumn
+  storey: ST_01
+  tag: S-COLS
+  profile: RECTANGULAR
+  dimensions:
+    width: 0.3
+    depth: 0.3
+  height: 3.5
+  rebar:
+    main_bars: 8DB16
+    stirrups: RB9@0.15
+    covering: 0.03
+  qto:
+    concrete_m3: 0.315
+    formwork_m2: 4.2
+  placement:
+    grid:
+    - '1'
+    - B
+- id: C1_2B
+  class: IfcColumn
+  storey: ST_01
+  tag: S-COLS
+  profile: RECTANGULAR
+  dimensions:
+    width: 0.3
+    depth: 0.3
+  height: 3.5
+  rebar:
+    main_bars: 8DB16
+    stirrups: RB9@0.15
+    covering: 0.03
+  qto:
+    concrete_m3: 0.315
+    formwork_m2: 4.2
+  placement:
+    grid:
+    - '2'
+    - B
+- id: C1_3B
+  class: IfcColumn
+  storey: ST_01
+  tag: S-COLS
+  profile: RECTANGULAR
+  dimensions:
+    width: 0.3
+    depth: 0.3
+  height: 3.5
+  rebar:
+    main_bars: 8DB16
+    stirrups: RB9@0.15
+    covering: 0.03
+  qto:
+    concrete_m3: 0.315
+    formwork_m2: 4.2
+  placement:
+    grid:
+    - '3'
+    - B
+- id: B1_1A_2A
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '1'
+    - A
+    to_grid:
+    - '2'
+    - A
+- id: B1_2A_3A
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '2'
+    - A
+    to_grid:
+    - '3'
+    - A
+- id: B1_1B_2B
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '1'
+    - B
+    to_grid:
+    - '2'
+    - B
+- id: B1_2B_3B
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '2'
+    - B
+    to_grid:
+    - '3'
+    - B
+- id: B1_1A_1B
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '1'
+    - A
+    to_grid:
+    - '1'
+    - B
+- id: B1_2A_2B
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '2'
+    - A
+    to_grid:
+    - '2'
+    - B
+- id: B1_3A_3B
+  class: IfcBeam
+  storey: ST_01
+  tag: S-BEAM
+  dimensions:
+    width: 0.2
+    depth: 0.4
+  elevation: 3.2
+  rebar:
+    main_top: 2DB12
+    main_bottom: 3DB12
+    stirrups: RB6@0.175
+    covering: 0.025
+    extra_bottom: 1DB12
+  qto:
+    concrete_m3: 0.32
+    formwork_m2: 4.0
+  placement:
+    from_grid:
+    - '3'
+    - A
+    to_grid:
+    - '3'
+    - B
+- id: S1_ROOM1
+  class: IfcSlab
+  storey: ST_01
+  tag: S-SLAB
+  slab_type: PS
+  thickness: 0.1
+  elevation: 0.0
+  boundary:
+  - - 0
+    - 0
+  - - 4
+    - 0
+  - - 4
+    - 5
+  - - 0
+    - 5
+  reinforcement:
+    mesh: WM4@0.20
+  qto:
+    area_m2: 20.0
+    concrete_m3: 1.0
+    formwork_m2: 0.0
+- id: S1_ROOM2
+  class: IfcSlab
+  storey: ST_01
+  tag: S-SLAB
+  slab_type: PS
+  thickness: 0.1
+  elevation: 0.0
+  boundary:
+  - - 4
+    - 0
+  - - 8
+    - 0
+  - - 8
+    - 5
+  - - 4
+    - 5
+  reinforcement:
+    mesh: WM4@0.20
+  qto:
+    area_m2: 20.0
+    concrete_m3: 1.0
+    formwork_m2: 0.0

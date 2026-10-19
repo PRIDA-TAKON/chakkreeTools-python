@@ -1,0 +1,265 @@
+module Chakkree_tools
+module Structure
+module RC
+module Reinforcement
+module RebarPattern
+
+
+# คลาส Stirrup ใช้ในการจัดสร้างเหล็กปลอก แบบหลายระยะได้ มีรูปแบบของเหล็กปลอกที่หลากหลายมากขึ้น
+# วางแผนว่าจะใช้กับคานและเสา
+# @example ตัวอย่างการใช้งาน:
+#  Sketchup.require('chakkree_tools/Structure/RC/Reinforcement/RebarPattern/StirrupPattern')
+#  parent = Sketchup.active_model.entities.add_group
+#  parent.name = "Stirrup1"
+#  option = {pattern: '2', end_hook: '135',  n_spacing: [[20, 150.mm,50.mm]], length: 4000.mm,  color: 'blue'}
+#  stirMaker = Chakkree_tools::Structure::RC::Reinforcement::RebarPattern::StirrupPattern.new(parent, 6.mm, 150.mm,350.mm, option)
+#  stir1 = stirMaker.create
+#  puts stirMaker.summary
+#  
+#  parent = Sketchup.active_model.entities.add_group
+#  parent.name = "Stirrup2"
+#  option = {pattern: '2', end_hook: '135',  n_spacing: [[5, 75.mm,50.mm],[10, 150.mm,100.mm],[5, 50.mm,100.mm]], length: 4000.mm,  color: 'red'}
+#  stirMaker = Chakkree_tools::Structure::RC::Reinforcement::RebarPattern::StirrupPattern.new(parent, 6.mm, 150.mm,350.mm, option)
+#  stir1 = stirMaker.create
+#  puts stirMaker.summary
+#  
+#  parent = Sketchup.active_model.entities.add_group
+#  parent.name = "Stirrup3"
+#  option = {pattern: '2', end_hook: '135',  n_spacing: [[5, 75.mm,50.mm],[10, 150.mm,75.mm],[5, 75.mm,50.mm]], length: 4000.mm,  color: 'maroon'}
+#  stirMaker = Chakkree_tools::Structure::RC::Reinforcement::RebarPattern::StirrupPattern.new(parent, 6.mm, 150.mm,350.mm, option)
+#  stirMaker.adjust_offset_for_length(3800.mm, offset=[50.mm,50.mm] , sub_length= [900.mm,900.mm])
+#  puts stirMaker.n_spacing.to_s
+#  stir1 = stirMaker.create
+#  
+class StirrupPattern
+	# @return [Sketchup::Group] parent เป็นที่บรรจุของเหล็กเสริม จะเป็น Group
+    attr_accessor :parent
+	[3, 200.mm]
+	# @return [Length]  ขนาดเส้นผ่านศูนย์กลางเหล็กเสริม
+	attr_accessor :dia
+	# @return [Length] ตัวแปร a แทนค่า A สำหรับกำหนดระยะของเหล็กเสริม 
+	attr_accessor :a
+	# @return [Length] ตัวแปร b แทนค่า B สำหรับกำหนดระยะของเหล็กเสริม 
+	attr_accessor :b
+	# @return [String] ชนิดของการงอปลายเหล็กปลอก '90' หรือ '135'
+	attr_accessor :end_hook  # '90', '135'
+	# @return [String] 
+	attr_accessor :pattern
+	# @return [Array] จำนวนของเหล็กเสริมในชุดอาร์เรย์ ค่าเริ่มต้นที่ n= 1 [ต่ำสุด] 
+	attr_accessor :n_spacing
+	attr_accessor :spacing_mode
+	# @return [Float] ตัวคูณของส่วนโค้งการมนมุม
+    attr_accessor :factor_Db
+    # @return [Float] ตัวคูณของส่วนยื่นของอฉาก หรือ งอขอ
+    attr_accessor :factor_Lh
+	
+	# === Initialize ===
+
+	# @param [Sketchup::Group] parent เป็น Group ที่ เหล็กปลอกจะไปบรรจุอยู่ภายใน
+	# @param [Length] dia ขนาดเส้นผ่านศูนย์กลางเหล็กเสริม
+	# @param [Length] a ตัวแปร A สำหรับกำหนดระยะของเหล็กเสริม 
+	# @param [Length] b ตัวแปร B สำหรับกำหนดระยะของเหล็กเสริม 
+	# @param [Hash] options ตัวเลือกเพิ่มเติม เช่น pattern, end_hook, spacing
+	def initialize(parent, dia ,a,b, options = {})
+		@parent  = parent
+		@dia = dia
+		@a = a
+		@b = b
+		
+		@length  = options[:length] || 4000.mm
+
+		@pattern     = options[:pattern] || '2'
+		@end_hook    = options[:end_hook] || '135'
+		@n_spacing   = options[:n_spacing] || [[1, 150.mm]]
+		@spacing_mode = options[:spacing_mode] || 'custom'
+
+		@factor_Db   = options[:factor_Db] || 4.0
+		@factor_Lh   = options[:factor_Lh] || 6.0
+		@color       = options[:color] || 'default'
+		@layer       = options[:layer]
+
+	end
+	
+	# === Public Methods ===
+	def create
+		stir_set = make_stirrup_set
+		distribute_stirrups(stir_set)
+	end
+	
+	# จะช่วยคำนวณ เพื่อสร้างหล็กเสริม แบบ 1 ระยะ กับ 3 ระยะ
+	# @params length [Sketchup::Length] ความยาวช่วงที่เหล็กปลอกจะวางเรียงลงไป
+	# @params offset [Array of Length] ระยะห่าง หัวและท้าย หรือ ซ้ายและขวา กรณี มี spacing เดียวไม่มีผล ไม่นำมาคำนวณ จะคำนวณหา ระยะถัวเฉลี่ยไม่เกิน d/2 แทน
+	# @params sub_length [Array of Length]  จะเป็นความยาวของเหล็กปลอกใน ฝั่งซ้าย และฝั่งขวา
+	def adjust_offset_for_length(length, offset=[50.mm,50.mm] , sub_length= [1.m,1.m])
+		if @n_spacing.count==1 then
+			s = @n_spacing[0][1]
+			n = (length/s).to_i + 1
+			n -= 1 if (n-1)*s > length
+			gap = (length - (n-1)*s)/2
+			@n_spacing[0][0]=n
+			@n_spacing[0][2]=gap
+		elsif @n_spacing.count==3 then
+			len_net = length - offset[0]-offset[1]
+			s1 = @n_spacing[0][1]
+			s2 = @n_spacing[1][1]
+			s3 = @n_spacing[2][1]
+			# คำนวณหา n1 ฝั่งซ้าย
+			n1 = ((sub_length[0] - offset[0])/s1).to_i + 1
+			n1 -= 1 if (offset[0]+(n1-1)*s1) > sub_length[0]
+			x1 = offset[0]+(n1-1)*s1
+			# คำนวณหา n3 ฝั่งชวา
+			n3 = ((sub_length[1] - offset[1])/s3).to_i + 1
+			n3 -= 1 if (offset[1]+(n3-1)*s3) > sub_length[1]
+			x3 =  length - offset[1]-(n3-1)*s3
+			# คำนวณหา n2
+			mid_length = x3-x1
+			n2 = (mid_length/s2).to_i + 1
+			gap = (mid_length-(n2-1)*s2)/2
+			n2 -=1 if gap <= s1
+			gap = (mid_length-(n2-1)*s2)/2
+			
+			@n_spacing[0] = [n1, s1 , offset[0]]
+			@n_spacing[1] = [n2, s2 , gap]
+			@n_spacing[2] = [n3, s3 , gap]
+		else
+			puts "StirrupPattern: ไม่ได้ระบุค่า n_spacing 1 หรือ 3 ช่วง ไม่สามารถช่วยคำนวณได้ ให้กำหนดเอง"  
+		end
+	end
+	
+  # สรุปข้อมูลสำหรับ debug หรือ UI
+	def summary
+		{
+		  pattern: @pattern,
+		  dia: @dia.to_mm,
+		  a: @a.to_mm,
+		  b: @b.to_mm,
+		  length: @length.to_mm,
+		  spacing: @n_spacing,
+		  total_count: count_stirrups
+		}
+	end
+
+
+	# === Private Methods ===
+	private
+	# ทำหน้าที่หน้าตันฉบับของชุดเหล็กปลอก เพื่อรอการสำเนา
+	def make_stirrup_set
+		stir_set = []
+		
+		Sketchup::require('chakkree_tools/Structure/RC/Reinforcement/RebarFactory')
+		rebar = Reinforcement::RebarFactory.create('51', @dia)
+		rebar.parent = @parent
+		rebar.layer  = resolve_layer
+		rebar.color  = resolve_color
+		rebar.factor_Db = @factor_Db
+		rebar.factor_Lh = @factor_Lh
+		
+		
+		case @pattern
+		when '1_1' # แบบตัว c แบบ 1 ขา ชนิด 1
+			# ไม่ได้ใช้ Rebar สร้างปลอกร่วมแล้ว ใช้ขาเดียว
+			rebar = Reinforcement::RebarFactory.create('00', @dia)
+			rebar.parent = @parent
+			rebar.layer = layer_name
+			rebar.color = @color || Reinforcement::RebarColors.new.getColor("#{@dia.to_mm.round}")
+			rebar.factor_Db = @factor_Db
+			rebar.factor_Lh = @factor_Lh
+			rebar.hook_at_Start  = true
+			rebar.hook_at_End  = true
+		    params = {'A'=>@b}
+			retStir = rebar.create(params)
+			Lib::TransformService.rotate(retStir,[0,0,0],[0,0,1],-90.degrees)
+			Lib::TransformService.rotate(retStir,[0,0,0],[1,0,0],90.degrees)
+			Lib::TransformService.translate(retStir,[0, (0.5+@factor_Db/2.0)*@dia ,@b/2])
+			retStir = Lib::TransformService.make_component(retStir)
+
+			[retStir]
+		when '2' then # แบบ 1 ขา
+			params = {'A'=>@a , 'B'=>@b, 'C'=>@end_hook}
+			
+			retStir = rebar.create(params)
+			retStir = Lib::TransformService.make_component(retStir)
+			#retStir.definition.name = @barMark
+			#retStir.name = @barMark
+			[retStir]
+		when '4_1' then # แบบ 4 ขา
+			# ปลอก 1
+			a1 = @a/2 +12.mm + @dia
+			params = {'A'=>a1 , 'B'=>@b, 'C'=>@end_hook}
+			retStir = rebar.create(params)
+			dy = @a/2 - a1/2
+			Lib::TransformService.translate(retStir,[0,dy,0])
+			retStir = Lib::TransformService.make_component(retStir)
+			#retStir.definition.name = @barMark
+			#retStir.name = @barMark
+			
+			cpy1 = Lib::TransformService.copy(retStir, 1 , [-@dia,0,0])[0]
+			Lib::TransformService.rotate(cpy1,[0,0,0],[0,0,1],180.degrees)
+			## 
+			[retStir, cpy1]
+		end
+	end
+	
+	# กระจายปลอกตาม n_spacing
+	def distribute_stirrups(stir_set)
+	  ret = []
+	  x = 0 # ทดระยะตัวแรก
+	  first_loop = true
+	  count = 1  # นับรอบ
+	  offset1 = @n_spacing[0][2] # สำหรับปรับแก้ ตำแหน่ง เพราะไปเลื่อน ตัวแรก
+	  @n_spacing.each do |(n, spacing , offset)|
+	    if count==1 then # รอบแรก มีเหล็กปลอกค้าง 1 ตัว
+			# เลื่อนปลอกแรก 
+			stir_set.each{|stir|
+				Lib::TransformService.translate(stir , [offset,0,0])
+				ret << stir
+			}
+			# สำเนาปลอกของ ชุดแรก
+			cpy = nil
+			stir_set.each{|stir|
+			   cpy = Lib::TransformService.copy(stir, n-1, [spacing, 0, 0])
+			}
+			ret += cpy
+		else # รอบ ต่อไป
+			stir_set.each{|stir|
+			    cpy = Lib::TransformService.copy(stir, n, [spacing, 0, 0])
+				cpy.each{|iRebar| 
+				   Lib::TransformService.translate(iRebar , [-spacing-offset1+x+offset,0,0])
+				}
+				ret += cpy
+			}
+		end
+		puts "%d) x=%dmm , offset = %dmm" %[count, x.to_mm , offset.to_mm.round] 
+		x +=  offset + (n-1)*spacing
+		puts " ,  after) x=%dmm" %[ x.to_mm] 
+		count += 1
+	  end
+	  ret
+	end
+
+	def count_stirrups
+		@n_spacing.inject(0) { |sum, pair| sum + pair.first.to_i }
+	end
+
+	def resolve_layer
+		if @dia > 10.mm
+		  @layer || "DB#{@dia.to_mm.round}"
+		else
+		  @layer || "RB#{@dia.to_mm.round}"
+		end
+	end
+
+	def resolve_color
+		Sketchup::require('chakkree_tools/Structure/RC/Reinforcement/RebarColors')
+		@color || Reinforcement::RebarColors.new.getColor("#{@dia.to_mm.round}")
+	end
+
+
+end # class Stirrup
+
+
+end # module RebarPattern
+end # module Reinforcement
+end # module RC
+end # module Structure
+end # module Chakkree_tools

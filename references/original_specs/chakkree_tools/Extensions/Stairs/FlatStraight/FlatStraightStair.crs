@@ -1,0 +1,11 @@
+# RebarScript บันไดตรงท้องเรียบแบบธรรมดาก่อน ต้นแบบ
+
+var W = 1000.mm  # ความกว้างบันได
+var R = 190.mm   # ระยะลูกตั้ง
+var T = 250.mm   # ระยะลูกนอน
+var t = 150.mm   # ความหนาบันได
+var n = 10       # จำนวนขั้น
+
+FlatStair 'concrete' , $n, 180.mm , 250.mm, 120.mm , \
+  1.m ,  ['concrete_pile','Gainsboro',0.5]   # v0.2.15+ 
+Make_Component 'concrete'  # v0.2.15+ 

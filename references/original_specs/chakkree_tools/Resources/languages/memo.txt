@@ -1,0 +1,5 @@
+จัดการภาษา ตามแนวทาง DanRathbun
+
+https://forums.sketchup.com/t/language-handler-problems/54974/11
+
+บันทึกเป็น ตัวแปร Hash เดียวกัน แต่แยกไฟล์ตามภาษา

@@ -1,0 +1,56 @@
+# ทดสอบ เส้นกริด
+name Grid-01
+
+var x1 = 0.mm
+var x2 = 4000.mm
+var x3 = 8000.mm
+var xMax = $x3
+
+var yCant = -1500.mm
+var y1 = 0.mm
+var y2 = 3500.mm
+var y3 = 5500.mm 
+var y4 = 9500.mm
+var yMax = $y4
+
+var extend = 2.m 
+
+var fSize = 120.mm
+
+Layer 'Grids'
+Grid $x1, $yMax + $extend*1.5 , "1" , 250.mm , 210.mm , N , ($y4-$y1).abs + $extend + 2.m
+Grid $x2, $yMax + $extend*1.5 , "2" , 250.mm , 210.mm , N , ($y4-$yCant).abs + $extend + 1.m
+Grid $x3, $yMax + $extend*1.5 , "3" , 250.mm , 210.mm , N , ($y4-$yCant).abs + $extend + 1.m
+
+Grid $x1-$extend, $yCant  , "" , 250.mm , 210.mm , W , ($x3-$x1).abs  + $extend + 1.m
+Grid $x1-$extend, $y1  , "A" , 250.mm , 210.mm , W , ($x3-$x1).abs  + $extend + 1.m
+Grid $x1-$extend, $y2 , "B" , 250.mm , 210.mm , W , ($x3-$x1).abs  + $extend + 1.m
+Grid $x1-$extend, $y3 , "C" , 250.mm , 210.mm , W , ($x3-$x1).abs  + $extend + 1.m
+Grid $x1-$extend, $y4 , "D" , 250.mm , 210.mm , W , ($x3-$x1).abs  + $extend + 1.m
+
+Dim $x1 , $yMax + $extend + 400.mm , ($xMax - $x1).abs , 100.mm , "%d"%(($xMax - $x1).abs.to_mm) , $fSize , 0
+Dim $x1 , $yMax + $extend + 100.mm , ($x2 - $x1).abs , 100.mm , "%d"%(($x2 - $x1).abs.to_mm) , $fSize , 0
+Dim $x2 , $yMax + $extend + 100.mm , ($x3 - $x2).abs , 100.mm , "%d"%(($x3 - $x2).abs.to_mm) , $fSize , 0
+Dim $x3 , $yMax + $extend + 100.mm , 600.mm , 100.mm , "%d"%(600.mm.to_mm) , $fSize , 0
+
+
+Dim $x1-$extend + 500.mm , $y1  , ($yMax - $y1).abs , 100.mm , "%d"%(($yMax - $y1).abs.to_mm) , $fSize , 90.degrees
+Dim $x1-$extend + 800.mm , $y1  , ($y2 - $y1).abs , 100.mm , "%d"%(($y2 - $y1).abs.to_mm) , $fSize , 90.degrees
+Dim $x1-$extend + 800.mm , $y2  , ($y3 - $y2).abs , 100.mm , "%d"%(($y3 - $y2).abs.to_mm) , $fSize , 90.degrees
+Dim $x1-$extend + 800.mm , $y3  , ($y4 - $y3).abs , 100.mm , "%d"%(($y4 - $y3).abs.to_mm.round) , $fSize , 90.degrees
+Dim $x1-$extend + 800.mm , $yCant  , ($yCant).abs , 100.mm , "%d"%(($yCant).abs.to_mm) , $fSize , 90.degrees
+
+# สำหรับคานซอยทดลอง cline
+cline $x2-600.mm, $y1-300.mm ,$x2-600.mm, $y2+300.mm # ข้างห้องรับแขก
+cline $x1+2200.mm, $y2-300.mm ,$x1+2200.mm, $y3+300.mm # ห้องน้ำ
+cline $x2-300.mm, $y3+1000.mm ,$x3+300.mm, $y3+1000.mm # ห้องนอน
+cline $x3+600.mm, $y2-300.mm ,$x3+600.mm, $y3+300.mm # ห้องครัว
+
+set_attribute "chakkree_tools", "type", 'STRING' , "DRAW2D"
+set_attribute "chakkree_tools", "subtype", 'STRING' , "GridLine"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "เส้นกริด_ครอบครับไทยร่วมสมัย๑"
+
+#var gridX = {"1"=>"%dmm"%($x1.to_mm.round), "2"=>"%dmm"%($x2.to_mm.round), "3"=>"%dmm"%($x3.to_mm.round)}
+#var gridY = {"A"=>"%dmm"%($y1.to_mm.round), "B"=>"%dmm"%($y2.to_mm.round), "C"=>"%dmm"%($y3.to_mm.round), "D"=>"%dmm"%($y4.to_mm.round)}
+#set_attribute "chakkree_tools", "data", 'JSON' , \
+  '{"gridX": JSON.parse(gridX ) , "gridY": JSON.parse(gridY ) , "type_length":"absolute" }'

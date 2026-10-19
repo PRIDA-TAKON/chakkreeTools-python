@@ -1,0 +1,90 @@
+# เสาหน้าตัดกลม
+# จองก่อน เพื่อใช้เป็นค่า default
+var d = 200.mm
+var cvr = 25.mm
+var dia = 12.mm
+var diaStir = 6.mm
+var s = 100.mm
+var n = 6
+
+break_IfNOT "หน้าตัดเสากลมแบบ0"
+
+# ตรวจว่าเป็น "หน้าตัดเสากลมแบบ0"
+get_attribute "chakkree_tools", "script_creater", 'STRING'  
+
+
+# เป็น trick ในการลักไก่
+if "$script_creater"=="หน้าตัดเสากลมแบบ0"
+   get_attribute "chakkree_tools", "data", "JSON"
+end
+
+set d = '$d'.to_l
+set dia = '$dia'.to_l
+set diaStir = '$diaStir'.to_l
+
+# bug ที่เกิดเมื่อชื่อไม่ตรง จะคืน 0 ไป ระวัง
+if "$script_creater"=="หน้าตัดเสากลมแบบ0"
+    set cvr = '$covering'.to_l
+    set s = '$spacing'.to_l
+end
+
+inputbox 'ป้อนค่าวาดหน้าตัดเสากลมแบบพื้นฐาน', \
+   ['ขนาด ศก. d = ', 'ระยะหุ้ม = ' ,  \
+     'จำนวนเหล็กยืน = ','dia.เหล็กยืน = ' , \
+     'dia.เหล็กปลอก = ' , 'ระยะห่างเหล็กปลอก = ' ] , \
+   [$d  , $cvr ,  \
+     $n ,"%dmm"%($dia).to_mm.round , \
+     "%dmm"%($diaStir).to_mm.round, $s] , \
+   ['','' , '6|8|10|12','12mm|16mm|20mm|25mm|28mm|32mm' , '6mm|9mm' , ''] , \
+   ['d' , 'cvr' , 'n' , 'dia' , 'diaStir' , 's']
+
+if "$script_creater"=="หน้าตัดเสากลมแบบ0"
+    GET_SELECTION
+    CLEAR_ENTITIES
+end
+
+#dumpvar x
+#dumpvar cvr
+#dumpvar dia1
+
+set dia = '$dia'.to_l            # ลักไก่ myEval มีปัญหากับ string
+set diaStir = '$diaStir'.to_l      # ลักไก่ myEval มีปัญหากับ string
+set n = $n
+var fSize = 35.mm
+
+circle 0.mm, 0.mm, $d/2 , 'None', 24  # คอนกรีต
+circle 0.mm, 0.mm, $d/2 - $cvr , 'None', 24  # ปลอก
+
+dim -$d/2 ,  50.mm , $d , $d/2 + 50.mm , $d.to_s , $fSize, 0.degrees
+
+# เหล็กยืน
+var stepAngle = 360.degrees/($n)
+var iAngle = 0.degrees
+var x = 0
+var y = 0
+var i = 0
+var r = $d/2-$cvr-$diaStir - $dia/2
+repeat $n
+   set x = $r*Math.cos($iAngle )
+   set y = $r*Math.sin($iAngle )
+   circle   $x ,$y , $dia/2 , 'black' , 12
+   set i = $i+1
+   set iAngle = $iAngle + $stepAngle 
+end
+
+text $d/2 + 50.mm ,   $fSize*1.2 ,  \
+  $n.to_s + "-DB" + $dia.to_mm.round.to_s + "มม"  , $fSize
+
+
+text $d/2 + 50.mm , - $fSize , "ป-RB" + $diaStir.to_mm.round.to_s + "มม @" +   $s.to_mm.round.to_s + "มม" , $fSize
+
+
+# ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+set_attribute "chakkree_tools", "type", 'STRING' , "Column_2DTOP"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "หน้าตัดเสากลมแบบ0"
+set_attribute "chakkree_tools", "rebar_script", 'STRING' , "Circular_00/Circ_Column.crs"
+set_attribute "chakkree_tools", "data", 'JSON' , \
+   '{"d":"%dmm"%($d.to_mm.round), \
+     "covering":"%dmm"%($cvr.to_mm.round), \
+     "n": $n , "dia":"%dmm"%($dia.to_mm.round) , \
+     "spacing": "%dmm"%($s.to_mm.round), "diaStir":"%dmm"%($diaStir.to_mm.round)  }'

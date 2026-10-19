@@ -1,0 +1,39 @@
+#EraseAll
+
+CheckCreator "chakkree_tools", "แผ่นพื้นสำเร็จรูป"
+get_attribute "chakkree_tools", "data", "JSON"
+
+#DUMPVAR x
+set L= '$L'.to_l
+set width = '$width'.to_l
+var t = 50.mm
+
+name PS_Slab
+
+# concrete
+#dumpvar n
+var x = 0.mm
+var boxName = 'PS350'
+Box 'PS350'  , [$width,$L,$t] ,['concrete','Bisque',0.3]
+Translate 'PS350' , [$x+$width/2,$L/2,+$t/2]
+
+Make_Component 'PS350'        # มาใหม่ v0.2.15+
+Repeat $n-1
+   set x = $x + $width
+   copy 'PS350',  1 , [$x, 0, 0] 
+end
+
+
+set_rotation_same_selected
+
+# ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+set_attribute "chakkree_tools", "type", 'STRING' , "PS_Slab_3D"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "แผ่นพื้นสำเร็จรูป"
+
+set_attribute "chakkree_tools", "SlabType", 'STRING' , "PS"
+set_attribute "chakkree_tools", "Storey", 'STRING' , "-"
+set_attribute "chakkree_tools", "data", 'JSON' , \
+   '{"L":"%dmm"%($L.to_mm.round), \
+     "width":"%dmm"%($width.to_mm.round), \
+     "n":$n  \
+      }'

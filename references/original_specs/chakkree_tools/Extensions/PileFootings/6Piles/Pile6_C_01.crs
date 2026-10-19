@@ -1,0 +1,75 @@
+# เหล็กเสริมฐานรากเสาเข็ม 6 ต้น
+
+CheckCreator "chakkree_tools",'ฐานรากเสาเข็ม6ต้น'
+get_attribute "chakkree_tools", "data", 'JSON' 
+#dumpvar x
+
+set B = '$B'.to_l
+set L = '$L'.to_l
+set t = '$t'.to_l
+
+# concrete
+Box 'concrte' , [$L,$B,$t] ,['concrete','Bisque',0.3]
+Translate 'concrte' , [0,0,-$t/2]
+
+var cvr = '$covering'.to_l
+#set n1 = 5
+set dia1 = '$dia1'.to_l
+#set n2 = 5
+set dia2 = '$dia2'.to_l
+#var nStir = 
+set diaStir = '$diaStir'.to_l
+
+
+var factorLh  = 6.0
+var factorDb  = 4.0
+var r = ($factorDb / 2 + 0.5) * $dia1
+var gap = $cvr + $r + $dia2
+var s = ($B - 2*$gap)/($n1-1)
+
+var a = (($factorDb / 2 + 0.5) + $factorLh )  * $dia1
+var b = $t - 2* $cvr - $dia2
+var c = $L - 2* $cvr
+
+rebar '1', $dia1 , 41 , [$a ,$b , $c , $b ,$a] , default , S , $n1 , $s
+tran '1' , [-$c/2 , -($B-2*$gap)/2 , -$t + $cvr + $dia2]
+
+set gap = $cvr + $r + $dia1
+set s = ($L - 2*$gap)/($n2-1)
+set a = (($factorDb / 2 + 0.5) + $factorLh  )  * $dia2
+set b = $t - 2* $cvr - $dia1
+set c = $B - 2* $cvr
+rebar '2', $dia2 , 41 , [$a ,$b , $c , $b ,$a] , default , S , $n2 , $s
+rot '2' , [0,0,0], [0,0,1], 90
+tran '2' , [ ($L-2*$gap)/2 , -$c/2 , -$t + $cvr ]
+
+# เหล็กปลอก
+set a = $B - 2* $cvr - 2 * $dia1
+set b = $L - 2* $cvr - 2 * $dia1
+rebar '3', $diaStir  , 51 , [$a, $b , 90] , default 
+rot '3', [0,0,0] , [0,1,0] , 90
+tran '3', [0, 0 , -$cvr - $dia1 - $dia2 - 20.mm ]
+
+
+#  เสาเข็ม v0.2.15+
+set Dp = '$Dp'.to_l
+var lenPile = 6.m
+Pile 'Rect_Pile1' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile1' , [-$factor_CC*$Dp,-$factor_CC*$Dp/2, -$t+50.mm]
+
+Pile 'Rect_Pile2' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile2' , [0,-$factor_CC*$Dp/2, -$t+50.mm]
+
+Pile 'Rect_Pile3' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile3' , [+$factor_CC*$Dp,-$factor_CC*$Dp/2, -$t+50.mm]
+
+Pile 'Rect_Pile4' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile4' , [-$factor_CC*$Dp,+$factor_CC*$Dp/2, -$t+50.mm]
+
+Pile 'Rect_Pile5' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile5' , [0,+$factor_CC*$Dp/2, -$t+50.mm]
+
+Pile 'Rect_Pile6' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+tran 'Rect_Pile6' , [+$factor_CC*$Dp,+$factor_CC*$Dp/2, -$t+50.mm]
+
+set_rotation_same_selected

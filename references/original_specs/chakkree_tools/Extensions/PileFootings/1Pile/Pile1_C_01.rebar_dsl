@@ -1,0 +1,179 @@
+definitions = Sketchup.active_model.definitions
+definitions.purge_unused
+
+sel = Sketchup.active_model.selection[0]
+creator = sel.get_attribute "chakkree_tools", "script_creater" , ""
+if creator != "ฐานรากเสาเข็ม1ต้นแบบ1" then
+  puts "ไม่ได้เลือก 'ฐานรากเสาเข็ม1ต้นแบบ1' "
+  exit # บังคับ error
+end
+
+data = sel.get_attribute "chakkree_tools", "data" , nil
+if data!= nil then
+   data = JSON.parse(data)
+   puts data
+   b = data['B'].to_l
+   t = data['t'].to_l
+   cvr = data['covering'].to_l
+   pile_w = data['Dp'].to_l
+   pileNo = '%dx%d'%[pile_w.to_cm.round , pile_w.to_cm.round]
+   dp = pile_w         # ขนาดเสาเข็ม
+   n1 = data['n1']
+   dia1 = data['dia1'].to_l
+   n2 = data['n2']
+   dia2 = data['dia2'].to_l
+   nStir = data['nStir']
+   diaStir = data['diaStir'].to_l
+
+   type = ""
+   creater = ""
+   # ถามข้อมูลเพิ่มเติม 
+   prompts = ['ความยาวเสาเข็ม : ']
+   defaults = [6.m]
+   list = [nil]
+   inp = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 1 ต้น')
+   if not inp then
+      puts "หยุดการทำงาน เนืองจากกดปุ่ม cancel การสร้าง PileCAP"
+      exit
+   end  
+   lenPile = inp[0]
+   
+   factorLh  = 6.0
+   factorDb  = 4.0
+   r = (factorDb / 2 + 0.5) * dia1
+   dx = cvr + r + dia1
+   s = (b - 2*dx)/(n1-1)
+   
+   mainGrp = new_group('PileCAP_F_P1')
+   set_host mainGrp
+
+   conc1 = box( 'concrete', [b, b , t])
+   conc1.material = set_material('concrete', 'Bisque', 0.3)
+   translate 'concrete' , [0  ,0,-t/2]
+
+   # เหล็กตะแกรงคว่ำ ทิศ X
+   a = (factorDb/2 + 0.5 + factorLh)* dia1
+   b1 = t-2*cvr 
+   c = b-2*cvr - 2*diaStir
+	 
+   grpU1 = mainGrp.entities.add_group
+   grpU1.name =  "Rebar_U1" 
+   set_host grpU1
+   rebar 'U1', dia1 , '41', 
+      {'A'=>a,'B'=>b1,'C'=>c,'D'=>b1, 'E'=>a, 
+        'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default'
+   rotate 'U1' ,[0,0,0] , [0,1,0] , 180.degrees
+   translate 'U1' , [c/2 , -b/2 +dx ,  - cvr]
+   make_component 'U1'
+   copy 'U1', n1 - 1 , [0, s, 0] 
+
+   # เหล็กตะแกรงคว่ำ ทิศ Y
+   grpU2 = mainGrp.entities.add_group
+   grpU2.name =  "Rebar_U2" 
+   set_host grpU2
+   b1 = b1 - dia1 * 2
+   rebar 'U2', dia1  , '41' , 
+     {'A'=>a,'B'=>b1,'C'=>c,'D'=>b1, 'E'=>a, 
+        'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default'
+   rotate 'U2' ,[0,0,0] , [0,1,0] , 180.degrees
+   rotate 'U2' ,[0,0,0] , [0,0,1] , 90.degrees
+   translate 'U2' , [ -b/2 +dx  ,c/2 ,  - cvr - dia1] 
+   make_component 'U2'  
+   copy 'U2', n1 - 1 , [s, 0, 0] 
+
+   grpU3 = mainGrp.entities.add_group
+   grpU3.name =  "Rebar_U3" 
+   set_host grpU3
+   factorLh = 4
+   a = (factorDb/2  + 0.5 + factorLh  )*dia2
+   b1 = c - dia1 * 2
+   dx = dx + 30.mm
+   s = (b - 2*dx)/(n2-1)
+   rebar 'U3', dia2  , '21' , 
+      {'A'=>a,'B'=>b1,'C'=>a, 
+        'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default'
+   translate 'U3' , [-b1/2, -b/2 +dx , -t/2 + a]
+   make_component 'U3'    
+   copy 'U3', n2 - 1 , [0,s, 0] 
+   
+   grpU4 = mainGrp.entities.add_group
+   grpU4.name =  "Rebar_U4" 
+   set_host grpU4
+   rebar 'U4', dia2  , '21' , 
+      {'A'=>a,'B'=>b1,'C'=>a, 
+        'factor_Db'=>factorDb,'factor_Lh'=>factorLh}, 'default'
+   translate 'U4' , [-b1/2, b/2 -dx , -t/2 + a + dia2]
+   rotate 'U4' , [0,0,0] , [0,0,1] , 90.degrees
+   make_component 'U4'        
+   copy 'U4', n2 - 1 , [s, 0, 0] 
+
+   # เหล็กปลอกวงที่ 1
+   grpStir1 = mainGrp.entities.add_group
+   grpStir1.name =  "Stir1" 
+   set_host grpStir1
+   a = b - 2* cvr 
+   dz = cvr + 50.mm + diaStir
+   s = (t/2 - dz)/(nStir-1)
+   rebar 'stir1', diaStir  , '51' , 
+       {'A'=>a,'B'=>a,'C'=>'90',
+        'factor_Db'=>4,'factor_Lh'=>6}, 'default'
+   rotate 'stir1' , [0,0,0] , [0,1,0] , 90.degrees
+   translate 'stir1' , [0, 0 , -t/2 ]
+   make_component 'stir1'       
+   copy 'stir1', nStir - 1 , [0, 0, -s] 
+
+   # เหล็กปลอกวงที่ 2
+   grpStir2 = mainGrp.entities.add_group
+   grpStir2.name =  "Stir2" 
+   set_host grpStir2
+   a = a/2 / Math.cos(45.degrees) + dia1*1.5
+   rebar 'stir2', diaStir  , '51' , 
+        {'A'=>a,'B'=>a,'C'=>'90',
+        'factor_Db'=>4,'factor_Lh'=>6}, 'default'
+   rotate 'stir2' , [0,0,0] , [1,0,0] , 45.degrees
+   rotate 'stir2' , [0,0,0] , [0,1,0] , 90.degrees
+   translate 'stir2' , [0, 0 , -t/2-diaStir ]
+   make_component 'stir2'        
+   copy 'stir2', nStir - 1 , [0, 0, -s] 
+
+   # เสาเข็ม 
+   #pile1 =  rect_pile(dp, lenPile, 15.mm)
+   pile1 = i_pile( pileNo , lenPile)
+
+   #pile_section 'Rect_Pile' , RECT , $Dp  , $lenPile , ['concrete_pile','Gainsboro',1]
+   translate pile1 , [0,0, -t/2]
+   make_component pile1
+
+   # ย้ายตำแหน่งตาม selection
+   #@@host.transformation = sel.transformation
+
+   # ติดตั้งค่า attributes หรือ information
+   @@host.set_attribute "chakkree_tools", "type",  "Footing_3D"
+   @@host.set_attribute "chakkree_tools", "script_creater",  "ฐานรากเสาเข็ม1ต้นแบบ1"
+   @@host.set_attribute "chakkree_tools", "FootingType",  "PILE_CAP"
+   @@host.set_attribute "chakkree_tools", "Storey",  "ฐานราก"
+   @@host.set_attribute "chakkree_tools", "Position", "1-A"
+
+   @@host.set_attribute "chakkree_tools", "data", 
+    {
+       "B"=>"%dmm"% (b.to_mm.round), 
+       "t"=>"%dmm"% (t.to_mm.round), 
+       "covering"=>"%dmm"% (cvr.to_mm.round) , 
+       "Dp"=> "%dmm"% (dp.to_mm.round) , 
+       "n1"=> n1 , 
+       "dia1"=>"%dmm"% (dia1.to_mm.round) , 
+       "n2"=> n2, 
+       "dia2"=>"%dmm"% (dia2.to_mm.round) , 
+       "nStir"=> nStir , 
+       "diaStir"=>"%dmm"% (diaStir.to_mm.round)  
+    }.to_json
+  
+    mainGrp = make_component(mainGrp)  
+    tr = sel.transformation.clone
+    #angle = eval("%g.degrees" % tr.rotz)
+    #rotPnt = tr.origin
+    #rot1 = Geom::Transformation.rotation(rotPnt, Z_AXIS, angle)
+    mainGrp.transform! tr
+else
+      puts " ไม่เจอ data ใน attribute 'chakkree_tools'"
+end

@@ -1,0 +1,57 @@
+# RebarScript chakkree_tools
+
+var L = 4000.mm
+var b = 200.mm
+var h = 400.mm
+var cvr = 25.mm
+
+var diaTM = 12.mm
+var diaBM = 12.mm
+var diaAdd = 12.mm
+var diaStir = 6.mm
+var s = 175.mm
+
+
+var Lnet = $L - 100.mm - 100.mm
+
+box 'concrete' ,[$Lnet,$b,$h],  ['concrete','Bisque',0.3]
+Make_Component 'concrete'
+tran 'concrete', [$L/2 , 0, -$h/2]
+
+### เหล็กเสริมบน
+var A = 12*$diaTM + ($factor_Db/2+0.5)*$diaTM
+var dx = ($b - 2* $cvr - 2 * $diaStir - $diaTM)/2
+rebar 'TopMain', $diaTM , 21 , [$A, 50.mm + $L + 50.mm , $A], default
+rot 'TopMain',[0,0,0],[1,0,0], 180
+tran 'TopMain', [-50.mm,-$dx,-$A-$cvr-$diaStir]
+Make_Component 'TopMain'
+
+copy 'TopMain', 1, [0, 2*$dx,0]
+
+### เหล็กเสริมล่าง
+set A = 12*$diaBM + ($factor_Db/2+0.5)*$diaBM 
+set dx = ($b - 2* $cvr - 2 * $diaStir - $diaBM )/2
+rebar 'BotMain', $diaBM , 21 , [$A, 50.mm + $L + 50.mm - $diaTM - $diaBM , $A], default
+tran 'BotMain', [-50.mm + $diaTM / 2 + $diaBM / 2 ,-$dx,-$h+$A+$cvr+$diaStir]
+Make_Component 'BotMain'
+
+copy 'BotMain', 1, [0, 2*$dx,0]
+
+# เหล็กเสริมพิเศษ ล่าง
+rebar 'AddB' , $diaAdd , 00, [$Lnet*5/7 ], default
+tran 'AddB' ,[$Lnet/7,0, -$h+$cvr+$diaStir+$diaAdd/2]
+
+set factor_Lh = 4
+var n = ($Lnet / $s).to_i  # ไม่รวมวงแรก
+var gap = ($Lnet- $n*$s)/2.0
+rebar 'stir' , $diaStir , 51 , [ $b - 2* $cvr ,  $h - 2* $cvr, 135 ], default
+tran 'stir' ,[100.mm+$gap, 0 , -$h/2]
+Make_Component 'stir'
+var i = 1
+repeat $n
+   copy 'stir', 1 , [$s*$i,0,0]
+   if ($i % 2)==1 
+      rot 'LastCopy', [0,0,-$h/2] , [1,0,0] , 180
+   endif
+   set i = $i + 1
+end

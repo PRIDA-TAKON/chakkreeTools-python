@@ -1,0 +1,114 @@
+class SimpleBeam
+  attr_accessor :w, :length
+  attr_accessor :host
+
+  def initialize(w, length)
+    @w = w
+    @length = length
+    @host = nil
+  end
+
+  # คำนวณแรงเฉือน (Shear Force) ที่ตำแหน่ง x
+  def shear_force(x)
+    @w * (@length / 2 - x)
+  end
+
+  # คำนวณโมเมนต์ดัด (Bending Moment) ที่ตำแหน่ง x
+  def bending_moment(x)
+    (@w * x * (@length - x)) / 2
+  end
+
+  # วาดคาน
+  def draw_beam(xOrg,yOrg)
+    model = Sketchup.active_model
+    entities = model.active_entities
+    if @host==nil then
+        @host = entities.add_group
+    end
+    points = [
+      [xOrg, yOrg, 0],
+      [xOrg+("%g.m" % @length).to_l , yOrg, 0]
+    ]
+    @host.entities.add_line(points[0], points[1])
+
+    scale = 200.mm/@w
+    num_points = 20
+    delta_x = @length / num_points.to_f
+    (0..num_points).each do |i|
+        xi = ("%gm" % [i * delta_x]).to_l
+        @host.entities.add_line([xOrg + xi  , yOrg,0],[xOrg +xi  , yOrg+@w*scale,0] )
+        @host.entities.add_line([xOrg + xi  , yOrg,0],[xOrg +xi - 50.mm  , yOrg+ 50.mm,0] )
+        @host.entities.add_line([xOrg + xi  , yOrg,0],[xOrg +xi + 50.mm  , yOrg+ 50.mm,0] )
+    end
+    @host.entities.add_line(points[0], points[1])
+    points[0][1] += 200.mm
+    points[1][1] += 200.mm
+    @host.entities.add_line(points[0], points[1])
+  end
+
+  # วาดแผนภาพ SFD
+  def draw_sfd(xOrg,yOrg)
+    scale = 1.m/2000
+    model = Sketchup.active_model
+    entities = model.active_entities
+    if @host==nil then
+        @host = entities.add_group
+    end
+    num_points = 20
+    delta_x = @length / num_points.to_f
+
+    x_old =  0;     y_old = 0
+    (0..num_points).each do |i|
+      x = i * delta_x
+      xi = ("%gm" % x).to_l
+      y = shear_force(x)
+      #puts "%s, %g" % [xi.to_s,y]
+      point1 = [ xOrg+xi , yOrg, 0]
+      point2 = [ xOrg+xi , yOrg+y*scale, 0]
+      @host.entities.add_line(point1, point2)
+      @host.entities.add_line([x_old, yOrg+y_old*scale,0], point2) if i > 0 
+      x_old = xi; y_old = y
+    end
+    @host.entities.add_line([xOrg, yOrg,0], [xOrg+("%g.m" % @length).to_l , yOrg,0])
+  end
+
+  # วาดแผนภาพ BMD
+  def draw_bmd(xOrg,yOrg)
+    scale = 1.m/2000
+    model = Sketchup.active_model
+    entities = model.active_entities
+    if @host==nil then
+        @host = entities.add_group
+    end
+    num_points = 20
+    delta_x = @length / num_points.to_f
+
+    x_old =  0;     y_old = 0
+    (0..num_points).each do |i|
+      x = i * delta_x
+      y = bending_moment(x)
+      xi = ("%gm" % x).to_l
+      point1 = [xOrg+xi , yOrg, 0]
+      point2 = [xOrg+xi , yOrg+y*scale, 0]
+      @host.entities.add_line(point1, point2)
+      @host.entities.add_line([x_old, yOrg+y_old*scale,0], point2) if i > 0 
+      x_old = xi; y_old = y
+    end
+    @host.entities.add_line([xOrg, yOrg,0], [xOrg+("%g.m" % @length).to_l , yOrg,0])
+  end
+end
+
+
+
+# สร้าง object ของ SimpleBeam
+beam = SimpleBeam.new(1000, 4)  # w = 1000 kg/m, length = 4 m
+# วาดคาน
+x = 0.m; y = 0.m
+beam.draw_beam(x,y)
+# วาดแผนภาพ SFD
+beam.draw_sfd(x,y-2.m)
+# วาดแผนภาพ BMD
+beam.draw_bmd(x,y-4.m)
+
+rot = Geom::Transformation.rotation([0,0,0], X_AXIS, 90.degrees)
+beam.host.transform! rot

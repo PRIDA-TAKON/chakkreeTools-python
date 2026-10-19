@@ -1,0 +1,232 @@
+# เสาเข็ม 3 ต้น 
+# ตัวแปร 4 ตัว ที่เป็นหลักในการกำหนดขนาดฐานราก
+
+# จองก่อน เพื่อใช้เป็นค่า default
+var t = 500.mm
+var cvr = 50.mm	
+var Dp = 180.mm
+var factorDpile = 3.0
+var factorEdge = 1.5
+var n1 = 4
+var dia1 = 12.mm
+var diaStir = 9.mm
+var nStir = 1
+
+break_IfNOT "ฐานรากเสาเข็ม3ต้น"
+# ตรวจว่าเป็น "ฐานรากเสาเข็ม3ต้น"
+get_attribute "chakkree_tools", "script_creater", 'STRING'
+
+if "$script_creater"=="ฐานรากเสาเข็ม3ต้น"
+   get_attribute "chakkree_tools", "data", "JSON"
+end
+
+set t = '$t'.to_l  
+set Dp = '$Dp'.to_l  
+set dia1 = '$dia1'.to_l
+set diaStir = '$diaStir'.to_l
+
+# bug ที่เกิดเมื่อชื่อไม่ตรง จะคืน 0 ไป ระวัง
+if "$script_creater"=="ฐานรากเสาเข็ม3ต้น"
+    set cvr = '$covering'.to_l
+    set factorDpile = $factor_CC
+    set factorEdge = $factor_CE
+end
+
+inputbox 'ป้อนข้อมูล PileCAP เสาเข็ม 3 ต้น' , \
+   ['ความหนา=','ระยะหุ้ม=' , 'ขนาดเสาเข็ม = ' ,  \
+     'ตัวคูณ ศก.เข็มถึงศก.เข็ม = ','ตัวคูณ ศก.เข็มถึงขอบฐานราก = ' , \
+     'จำนวนเหล็กเสริม = ' , 'dia.เหล็กเสริม = ' , \
+     'dia.เหล็กรัดรอบ = '], \
+   [$t, $cvr, "%dmm"%$Dp.to_mm.round , \
+     $factorDpile , $factorEdge  , \
+     $n1, "%dmm"%$dia1.to_mm.round , "%dmm"%($diaStir.to_mm.round) ], \
+   ['','','180mm|220mm|260mm|300mm|350mm|400mm|450mm|650mm','','' , \
+    '3|4|5|6|7|8|9|10|12', '9mm|12mm|16mm|20mm|25mm|28mm|32mm' , '6mm|9mm|12mm'] , \
+   ['t' , 'cvr' , 'Dp' , 'factorDpile' , 'factorEdge' , 'n1' , 'dia1' , 'diaStir']
+
+dumpvar cvr
+
+if "$script_creater"=="ฐานรากเสาเข็ม3ต้น"
+    GET_SELECTION
+    CLEAR_ENTITIES
+end
+
+set Dp = '$Dp'.to_l  
+set dia1 = '$dia1'.to_l
+set diaStir = '$diaStir'.to_l
+
+dumpvar Dp
+
+var Dp3 = $factorDpile*$Dp
+var DpEdge = $factorEdge*$Dp
+set nStir = 1
+
+
+# ------------------------
+# 
+
+var tan60 =  Math.tan(60.degrees)
+var gap1 = $cvr+$dia1+$diaStir/2   # ระยะเหล็กรัดรอบ
+var gap2 = $cvr+$dia1/2   # ระยะเหล็กหลัก
+var L1 = $factorDpile*$Dp   # ระยะจาก CL เข็ม ถึง CL เข็ม
+var L2 = $factorEdge*$Dp  # ระยะจาก CL เข็ม ถึง  ขอบฐานราก
+
+var hTri1 = ($L1/2)*Math.tan(60.degrees)   # ความสูงสามเหลี่ยมใน
+var hTri2 = ($hTri1 /3 + $L2) *3         # ความสูงสามเหลี่ยมนอก
+var hTri3 = ($hTri2 /3 - $gap1 ) *3         # ความสูงสามเหลี่ยมเหล็กรัดรอบ
+var hTri4 = ($hTri2 /3 - $gap2 ) *3         # ความสูงสามเหลี่ยมเหล็กหลัก
+
+
+var LTri2 =  2* $hTri2/Math.tan(60.degrees) # ความกว้างฐานสามเหลี่ยมนอก
+var LTri3 =  2* $hTri3/Math.tan(60.degrees) # ความกว้างฐานสามเหลี่ยมเหล็กรัดรอบ
+var LTri4 =  2* $hTri4/$tan60 # ความกว้างฐานสามเหลี่ยมเหล็กหลัก
+
+var x1 = $Dp3/ 2
+var x4 = $LTri2 / 2
+var x7 = $x4 - ($DpEdge/Math.tan(60.degrees)) 
+var x8 = $x7 - ($DpEdge/Math.tan(60.degrees))
+var x11 = $DpEdge/Math.tan(60.degrees)
+var x15 = $LTri3/2 - 2*($DpEdge-$gap1 )/ $tan60
+var x16 = $LTri3/2 -   ($DpEdge-$gap1 )/ $tan60
+var x17 =  ($DpEdge-$gap1 ) / $tan60
+
+var y1 = -$hTri1 /3
+var y3 = $hTri1 * 2/3.0
+var y4 = -$hTri2 /3
+var y6 = $hTri2 * 2/3.0
+var y7 = -$hTri1 /3
+var y8 = $y4 
+var y11 = $y6 - $DpEdge
+var y15 = $y8 + $gap1 
+var y16 = $y1
+var y17 = $hTri3 *2.0/3 - ($DpEdge-$gap1 )
+
+
+PileSection -$x1 , $y1, 'R%d'%($Dp.to_mm.round) 
+PileSection  $x1 , $y1, 'R%d'%($Dp.to_mm.round) 
+PileSection 0 ,$y3, 'R%d'%($Dp.to_mm.round) 
+
+# สามเหลี่ยม วงใน
+linedash -$x1 , $y1 , $x1 , $y1,[50.mm,10.mm]
+linedash -$x1 , $y1 , 0 , $y3,[50.mm,10.mm]
+linedash  $x1 , $y1 , 0 , $y3,[50.mm,10.mm]
+
+#linedash $x4,$y4, 0 , $y6 , [50.mm,10.mm]
+#linedash $x4,$y4, -$x4 , $y4 , [50.mm,10.mm]
+#linedash -$x4,$y4, 0 , $y6 , [50.mm,10.mm]
+
+# เส้นขอบฐานราก
+line  -$x7, $y7 ,  -$x11, $y11
+line   $x7, $y7 ,   $x11, $y11
+line  -$x8, $y8 ,   $x8, $y8
+# เส้นตัดขอบสามเหลี่ยมหัวฐานราก
+line  -$x11, $y11 ,  $x11, $y11
+line  $x7, $y7 ,  $x8, $y8
+line -$x7, $y7 , -$x8, $y8
+
+# เหล็กรัดรอบ
+line  -$x15, $y15 ,  $x15, $y15
+line  -$x15, $y15 ,  -$x16, $y16
+line   $x15, $y15 ,   $x16, $y16
+line  -$x16, $y16 ,  -$x17, $y17
+line   $x16, $y16 ,   $x17, $y17
+line  -$x17, $y17 ,   $x17, $y17 
+
+# คำนวณ ซ้ำ แต่ใช้ตัวแปรเดิม
+set x15 = $LTri4/2 - 2*($DpEdge-$gap2 )/ $tan60
+set x16 = $LTri4/2 -   ($DpEdge-$gap2 )/ $tan60
+set x17 =  ($DpEdge-$gap2 ) / $tan60
+set y15 = $y8 + $gap2 
+set y16 = $y1
+set y17 = $hTri4 *2.0/3 - ($DpEdge-$gap2 )
+
+# เส้นตรวจสอบแนวตำแหน่งเหล็กเสริมหลัก
+#linedash  -$x15, $y15 ,  $x15, $y15 , [25.mm,5.mm]
+#linedash  -$x15, $y15 ,  -$x16, $y16 , [25.mm,5.mm]
+#linedash   $x15, $y15 ,   $x16, $y16 , [25.mm,5.mm]
+#linedash  -$x16, $y16 ,  -$x17, $y17 , [25.mm,5.mm]
+#linedash   $x16, $y16 ,   $x17, $y17 , [25.mm,5.mm]
+#linedash  -$x17, $y17 ,   $x17, $y17 , [25.mm,5.mm]
+
+# เหล็กหลัก ชุด 1 
+var gap3 = 50.mm
+var xStart =  - $x15 + $gap3
+var xEnd = - $x17 + $gap3
+var s1 = (2*$x15.abs-2*$gap3)/($n1-1)  # ระยะห่าง ตัวล่าง
+var s2 = (2*$x17.abs-2*$gap3)/($n1-1)  # ระยะห่าง ตัวบน
+dumpvar y17
+repeat $n1
+  line $xStart  , $y15 , $xEnd ,  $y17
+  set xStart = $xStart  + $s1
+  set xEnd = $xEnd + $s2 
+end
+
+# เหล็กหลัก ชุด 2
+set xStart =  - $x15 + $gap3
+set xEnd = - $x17 + $gap3
+var cos120 =  Math.cos(2*Math::PI/3)
+var sin120 =  Math.sin(2*Math::PI/3)
+var x1d = 0
+var x2d = 0
+var y1d = 0
+var y2d = 0
+repeat $n1  # เหล็กหลัก ชุด 2
+  set x1d = $xStart*$cos120 - $y15*$sin120
+  set y1d = $xStart*$sin120 + $y15*$cos120
+  set x2d = $xEnd*$cos120 - $y17*$sin120
+  set y2d =  $xEnd*$sin120 + $y17*$cos120
+  #RotatePoint ['x1d','y1d'] , [$xStart,  $y15] , 120.degrees
+  #RotatePoint ['x2d','y2d'] , [$xEnd,  $y17] , 120.degrees
+  #DUMPVAR x
+  line $x1d ,  $y1d ,  $x2d  ,  $y2d 
+
+  set xStart = $xStart  + $s1
+  set xEnd = $xEnd + $s2 
+end
+
+# เหล็กหลัก ชุด 3
+set xStart =  - $x15 + $gap3
+set xEnd = - $x17 + $gap3
+set cos120 =  Math.cos(-120.degrees)
+set sin120 =  Math.sin(-120.degrees)
+repeat $n1  # เหล็กหลัก ชุด 3
+  set x1d = $xStart*$cos120 - $y15*$sin120
+  set y1d = $xStart*$sin120 + $y15*$cos120
+  set x2d = $xEnd*$cos120 - $y17*$sin120
+  set y2d =  $xEnd*$sin120 + $y17*$cos120
+  line $x1d ,  $y1d ,  $x2d  ,  $y2d 
+
+  set xStart = $xStart  + $s1
+  set xEnd = $xEnd + $s2 
+end
+
+var fSize = 40.mm
+dim -$x1, $y8 - 300.mm , \
+    $Dp3, 100.mm , \
+    $Dp3.to_l.to_s , $fSize , 0.degrees
+dim -$x7 - 50.mm , $y8 , \
+    $DpEdge, 100.mm , \
+    $DpEdge.to_l.to_s ,  $fSize , 90.degrees
+dim -$x7 - 50.mm , $y7 , \
+    $hTri1/3 , 100.mm , \
+    ($hTri1/3).to_l.to_s ,  $fSize , 90.degrees
+dim -$x7 - 50.mm , 0 , \
+    $hTri1*2.0/3 , 100.mm , \
+    ($hTri1*2.0/3).to_l.to_s ,  $fSize , 90.degrees
+dim -$x7 - 50.mm , $y3 , \
+    ($y11-$y3) , 100.mm , \
+    ($y11-$y3).to_l.to_s ,  $fSize , 90.degrees
+
+# ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+set_attribute "chakkree_tools", "type", 'STRING' , "Footing_2DTOP"
+set_attribute "chakkree_tools", "script_creater", 'STRING' , "ฐานรากเสาเข็ม3ต้น"
+set_attribute "chakkree_tools", "rebar_script", 'STRING' , "3Piles/PileCAP_Rebar_3P.crs"
+set_attribute "chakkree_tools", "data", 'JSON' , \
+   '{"t":"%dmm"%($t.to_mm.round), \
+     "covering":"%dmm"%($cvr.to_mm.round), \
+     "factor_CC": $factorDpile, \
+     "factor_CE": $factorEdge, \
+     "Dp": "%dmm"%($Dp.to_mm.round), \
+     "n1": $n1 , "dia1":"%dmm"%($dia1.to_mm.round) , \
+     "nStir": $nStir , "diaStir":"%dmm"%($diaStir.to_mm.round), \
+     "factor_CC":$factorDpile, "factor_CE":$factorEdge  }'

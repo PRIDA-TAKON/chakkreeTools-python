@@ -1,0 +1,85 @@
+# TopView RectPile 2 Piles
+# -------------------------
+
+# จองก่อน เพื่อใช้เป็นค่า default
+t = 500.mm
+cvr = 50.mm
+dp = 220.mm         # ขนาดเสาเข็ม
+n1 = 5
+dia1 = 16.mm   # แนวนอน
+n2 = 8
+dia2 = 12.mm   # แนวตั้ง
+diaStir = 9.mm
+factorDpile = 3.0
+factorEdge = 1.5
+nStir =1
+
+_B = 500.mm # ตั้งไว้แก้ bug
+_L = 1000.mm # ตั้งไว้แก้ bug
+
+sel = Sketchup.active_model.selection[0]
+if sel then # ถ้ามีการเลือกของเก่า
+  creator =  sel.get_attribute "chakkree_tools", "script_creater" , ""
+  if creator == "ฐานรากเสาเข็ม2ต้น" then
+       data = sel.get_attribute "chakkree_tools", "data" 
+       data = JSON.parse( data )
+       t = data['t'].to_l  
+       dp = data['Dp'].to_l  
+       dia1 = data['dia1'].to_l
+       dia2 = data['dia2'].to_l
+       diaStir = data['diaStir'].to_l
+       cvr = data['covering'].to_l
+  end
+end
+
+prompts = ['ความหนา =','ระยะหุ้ม=' , 'ขนาดเสาเข็ม = ', \
+      'ตัวคูณ ศก.เข็มถึงศก.เข็ม = ','ตัวคูณ ศก.เข็มถึงขอบฐานราก = ', \
+      'จำนวนเหล็กเสริมแนวนอน = ' , 'dia.เหล็กเสริมแนวนอน = ' , \
+      'จำนวนเหล็กเสริมแนวตั้ง = ' , 'dia.เหล็กเสริมแนวตั้ง = ' , \
+      'dia.เหล็กรัดรอบ = ']
+defaults = [ t,  cvr, "%dmm"%dp.to_mm.round , \
+       factorDpile  , factorEdge  , \
+       n1 ,"%dmm"%dia1.to_mm.round , \
+       n2 , "%dmm"%dia2.to_mm.round , \
+       "%dmm"%(diaStir.to_mm.round) ]
+list = ['','','180mm|220mm|260mm|300mm|350mm|400mm|450mm|650mm','','', \
+      '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , \
+      '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , \
+      '6mm|9mm|12mm' ]
+input = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 2 ต้น')
+
+sel.entities.clear! if creator=="ฐานรากเสาเข็ม2ต้น"
+
+if input then
+  t = input[0].to_l  
+  cvr = input[1].to_l  
+  dp = input[2].to_l
+  factorDpile = input[3]
+  factorEdge = input[4]
+  n1 = input[5]
+  dia1 = input[6].to_l
+  n2 = input[7]
+  dia2 = input[8].to_l
+  diaStir = input[9].to_l
+  
+  dp_CC = factorDpile*dp    # ระยะ CL เข็ม ถึง CL เข็ม
+  dp_CE =  factorEdge*dp    # ระยะ CL เข็ม ถึง ขอบฐานราก
+  
+  _L = dp_CE + dp_CC + dp_CE
+  _B = dp_CE * 2
+  
+  factorDb = 4.0
+  factorLh = 6.0
+  # -------------------------
+  fSize = 55.mm
+  # -------------------------
+  showRebarText = false
+  
+  mainGrp = new_group "TopView_1RectPile"
+  set_host mainGrp
+  
+  # center cross
+  wtC = 50.mm
+  line -wtC , 0 , wtC , 0
+  line 0,-wtC, 0  , wtC
+end

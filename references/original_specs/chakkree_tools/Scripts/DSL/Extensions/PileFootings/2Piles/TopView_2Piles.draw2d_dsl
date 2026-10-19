@@ -1,0 +1,224 @@
+# TopView RectPile 2 Piles
+# -------------------------
+
+# จองก่อน เพื่อใช้เป็นค่า default
+t = 500.mm
+cvr = 50.mm
+dp = 260.mm         # ขนาดเสาเข็ม
+pile_type = "I"
+pile_embed = 75.mm
+n1 = 9
+dia1 = 12.mm   #แนวนอน
+n2 = 11
+dia2 = 12.mm   # แนวตั้ง
+diaStir = 9.mm
+factorDpile = 3.0
+factorEdge = 1.5
+nStir =1
+
+b = 500.mm # ตั้งไว้แก้ bug
+l = 1000.mm # ตั้งไว้แก้ bug
+
+# ------------------------------
+
+# ------------------------------
+
+model = Sketchup.active_model
+sel = model.selection[0]
+data = nil
+creator = nil
+if sel then
+   data = sel.get_attribute "chakkree_tools", "data", nil
+   creator = sel.get_attribute "chakkree_tools", "script_creater", nil
+   if creator!= "ฐานรากเสาเข็ม2ต้น" then
+      puts "ไม่ใช่ : ฐานรากเสาเข็ม2ต้น"
+      exit
+   else
+      data = JSON.parse(data)
+      t = data['t'].to_l
+      cvr = data['covering'].to_l
+      dp = data['Dp'].to_l        # ขนาดเสาเข็ม
+      pile_type = data['pile_type'] if data['pile_type'] 
+      pile_embed = data['pile_embed'] if data['pile_embed'] 
+      n1 = data['n1']
+      dia1 = data['dia1'].to_l  # แนวนอน
+      n2 = data['n2']
+      dia2 = data['dia2'].to_l   # แนวตั้ง
+      diaStir = data['diaStir'].to_l
+      factorDpile = data['factor_CC']
+      factorEdge = data['factor_CE']
+      nStir = data['nStir']
+   end
+end
+
+prompts = ['ความหนา =','ระยะหุ้ม=' , 
+       'ชนิดเสาเข็ม = ' ,'ขนาดเสาเข็ม = ', 'ระยะฝังหัวเสาเข็ม = ',
+      'ตัวคูณ ศก.เข็มถึงศก.เข็ม = ','ตัวคูณ ศก.เข็มถึงขอบฐานราก = ', 
+      'จำนวนเหล็กเสริมแนวนอน = ' , 'dia.เหล็กเสริมแนวนอน = ' , 
+      'จำนวนเหล็กเสริมแนวตั้ง = ' , 'dia.เหล็กเสริมแนวตั้ง = ' , 
+      'dia.เหล็กรัดรอบ = ']
+defaults = [ t,  cvr, 
+       pile_type ,"%dmm"%dp.to_mm.round , pile_embed, 
+       factorDpile  , factorEdge  , 
+       n1 , "%dmm"%dia1.to_mm.round  , 
+       n2 , "%dmm"%dia2.to_mm.round  , 
+        "%dmm"%diaStir.to_mm.round   ]
+list = ['','' , 
+        'Rect|I','180mm|220mm|260mm|300mm|350mm|400mm|450mm|650mm', '',
+        '','', 
+        '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , 
+        '','9mm|12mm|16mm|20mm|25mm|28mm|32mm' , 
+        '6mm|9mm|12mm' ] 
+input = UI.inputbox(prompts, defaults, list, 'ป้อนข้อมูล PileCAP เสาเข็ม 2 ต้น')
+
+if input then 
+  if creator=="ฐานรากเสาเข็ม2ต้น" and sel then
+         set_host sel        # GET_SELECTION
+         sel.entities.clear! # CLEAR_ENTITIES
+   else
+         set_host new_group "TwoPiles_Footing"
+   end
+  t = input[0].to_l
+  cvr = input[1].to_l
+  pile_type = input[2] 
+  dp = input[3].to_l       # ขนาดเสาเข็ม
+  pile_embed =  input[4].to_l
+  factorDpile = input[5]
+  factorEdge = input[6]
+  
+  n1 = input[7]
+  dia1 = input[8].to_l  # แนวนอน
+  n2 = input[9]
+  dia2 = input[10].to_l   # แนวตั้ง
+  diaStir = input[11].to_l
+
+  nStir = 1
+  
+  dp_CC = factorDpile*dp    # ระยะ CL เข็ม ถึง CL เข็ม
+  dp_CE =  factorEdge*dp    # ระยะ CL เข็ม ถึง ขอบฐานราก
+
+  l = dp_CE + dp_CC + dp_CE
+  b = dp_CE * 2
+  factorDb = 4.0
+  factorLh = 6.0
+  # -------------------------
+  fSize = 55.mm
+  showRebarText = false
+  # center cross
+  wtC = 50.mm
+  line [-wtC , 0] , [wtC , 0]
+  line [0,-wtC]   , [0  , wtC]
+  # concrete
+  rect [-l/2 , -b/2] , [l ,b]
+  # Main Dimension
+  dimension [-l/2 , b/2+350.mm] , l , 100.mm , l.to_l.to_s , fSize
+  dimension [-l/2-350.mm , -b/2] , b , 100.mm ,  b.to_l.to_s  , fSize, 90.degrees
+  # minor dim
+  dimension [-l/2     , b/2+150.mm] , dp_CE  , 150.mm , dp_CE.to_l.to_s , fSize, 0.degrees
+  dimension [-dp_CC/2 , b/2+150.mm] , dp_CC/2 , 150.mm , (dp_CC/2).to_l.to_s , fSize, 0.degrees
+  dimension [0        , b/2+150.mm] , dp_CC/2 , 150.mm , (dp_CC/2).to_l.to_s , fSize, 0.degrees
+  dimension [dp_CC/2  , b/2+150.mm] , dp_CE   , 150.mm , (dp_CE).to_l.to_s , fSize, 0.degrees
+
+  dimension [-l/2-150.mm , -b/2] , b/2 , 150.mm , (b/2).to_l.to_s , fSize, 90.degrees
+  dimension [-l/2-150.mm ,  0 ], b/2 , 150.mm , (b/2).to_l.to_s , fSize, 90.degrees
+  
+  linedash [-l/2, -b/2-200.mm] , [-l/2, b/2+200.mm],[50.mm,10.mm]
+  linedash [-dp_CC/2, -b/2-200.mm] , [-dp_CC/2, b/2+200.mm],[50.mm,10.mm] 
+  linedash [ dp_CC/2, -b/2-200.mm] , [ dp_CC/2, b/2+200.mm],[50.mm,10.mm] 
+  linedash [ l/2, -b/2-200.mm] ,  [l/2, b/2+200.mm],[50.mm,10.mm]
+
+  linedash [-l/2-200.mm , 0] , [l/2+200.mm, 0] ,[30.mm,10.mm] 
+  linedash [-l/2-200.mm , -b/2] , [l/2+200.mm, -b/2] ,[30.mm,10.mm] 
+  linedash [-l/2-200.mm ,  b/2] , [l/2+200.mm,  b/2] ,[30.mm,10.mm] 
+  
+  # Rect Pile
+  wFillet = 10.mm
+  x1 = dp_CC / 2
+  if pile_type.upcase=='RECT' then
+    pile_rect_section   [ x1 , 0] , 'R%d'%(dp.to_mm.round), wFillet , 'gainsboro'
+    pile_rect_section   [-x1 , 0] , 'R%d'%(dp.to_mm.round), wFillet , 'gainsboro'
+  elsif pile_type.upcase=='I' then
+    pile_I_section  [ x1 , 0] , '%dx%d'%[dp.to_cm.round, dp.to_cm.round], wFillet , 'gainsboro'
+    pile_I_section  [-x1 , 0] , '%dx%d'%[dp.to_cm.round, dp.to_cm.round], wFillet , 'gainsboro'
+  end
+  
+  
+  # เหล็กปลอกรัดรอบ
+  a = b - 2*cvr - 2*dia2
+  b1 = l - 2*cvr - 2*dia1
+  c = ((factorDb+1)/2+factorLh) * diaStir
+  r = factorDb/2 * diaStir
+  # ขอคำสั่งจาก Draw2D_Engine มาช่วย เป็นการทริคการโกง ไม่ควรทำต้องสร้างคำสั่ง
+  Sketchup::require('chakkree_tools/Draw2D/Draw2D_Engine')
+  canvas = Chakkree_tools::Draw2D::Draw2D_Engine.new
+  canvas.canvas = @@host
+  r = (5.0/2+0.5)*dia1
+  canvas.showRebarText = false
+  canvas.rebarShape( 
+      -l/2 + cvr + dia1 , b/2 - cvr - dia1, '51' , 
+      [a, b1 , c], diaStir,r
+  )
+  # วง เหล็กรัดรอบ
+  if  diaStir>9.mm  then
+     text [-l / 2  ,  -b/2 - 400.mm] ,  
+        "เหล็กรัดรอบ " + nStir.to_s  + "ชุด-"  + "DB" +
+        diaStir.to_mm.round.to_s + "มม" , fSize
+  else
+     text [-l / 2  ,  -b/2 - 400.mm] ,  
+        "เหล็กรัดรอบ " + nStir.to_s  + "ชุด-"  + "DB" +
+        diaStir.to_mm.round.to_s + "มม" , fSize
+  end
+  # เหล็กเสริมแนวนอน
+  r = (factorDb/2 + 0.5) * dia2
+  x1 = -l/2 + cvr + diaStir + dia1
+  y1 = b/2 - cvr - dia2 - diaStir - r - dia2
+  rect [x1 , y1] , [2*x1.abs , dia1] , 'black'
+
+  if dia1>9.mm
+     text [l/2 + 100.mm ,  b/2 + 100.mm] ,  
+         n1.to_s  + "-"  + "DB" +  
+         dia1.to_mm.round.to_s + "มม" , fSize
+  elsif $dia1<=9.mm
+     text [l/2 + 100.mm ,  b/2 + 100.mm] , 
+         n1.to_s  + "-"  + "RB" +  
+         dia1.to_mm.round.to_s + "มม" , fSize
+  end
+  
+  # เหล็กเสริมแนวตั้ง
+  r = (factorDb/2 + 0.5) * dia1
+  x1 = -l/2 + cvr + dia1 + r
+  y1 = -b/2 + cvr + diaStir + dia2
+  rect [x1 , y1] , [dia2 , 2*y1.abs] , 'black'
+  if dia2>9.mm
+     text [-dp_CC/2 + 100.mm , - b/2 - 200.mm] ,  
+         n2.to_s  + "-"  + "DB" +  
+         dia2.to_mm.round.to_s + "มม" , fSize
+  elsif $dia1<=9.mm
+     text [-dp_CC/2 + 100.mm , - b/2 - 200.mm] , 
+         n2.to_s  + "-"  + "RB" +  
+         dia2.to_mm.round.to_s + "มม" , fSize
+  end
+  # ติดตั้งข้อมูลไปกับโมเดล ตามหลักการ BIM Process
+  @@host.set_attribute "chakkree_tools", "type", "Footing_2DTOP"
+  @@host.set_attribute "chakkree_tools", "script_creater" , "ฐานรากเสาเข็ม2ต้น"
+  @@host.set_attribute "chakkree_tools", "rebar_script" , "PileFootings/2Piles/Pile2_01.rebar_dsl"
+  data = {
+     "B"=>"%dmm"%(b.to_mm.round),
+     "L"=>"%dmm"%(l.to_mm.round),
+     "t"=>"%dmm"%(t.to_mm.round),
+     "covering"=>"%dmm"%(cvr.to_mm.round),
+     "pile_type"=> pile_type,
+     "pile_embed"=> pile_embed,
+     "Dp"=> "%dmm"%(dp.to_mm.round),
+     "n1"=> n1 , "dia1"=>"%dmm"%(dia1.to_mm.round) ,
+     "n2"=> n2 , "dia2"=>"%dmm"%(dia2.to_mm.round) ,
+     "nStir"=> nStir , "diaStir":"%dmm"%(diaStir.to_mm.round) ,
+     "factor_CC"=>factorDpile, "factor_CE"=>factorEdge
+  }
+  @@host.set_attribute "chakkree_tools", "data", data.to_json
+
+  
+  puts "วาดเสร็จแล้ว"
+end
+  
+puts "จบการรัน"

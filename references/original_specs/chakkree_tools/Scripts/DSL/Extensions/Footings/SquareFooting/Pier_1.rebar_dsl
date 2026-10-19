@@ -1,0 +1,66 @@
+# Rebar_DSL 
+# สร้างเสาตอม่อ และใส่เหล็กเสริม
+
+model = Sketchup.active_model
+
+
+set_host new_group('Pier1')
+
+
+cvr = 25.mm
+b = 200.mm
+t = 200.mm
+h = 1000.mm
+dia1 = 12.mm
+diaStir = 6.mm
+s = 150.mm
+ext_top = 500.mm
+ext_bttm = 200.mm
+
+size = [b,t,h]
+center = [0,0, h/2]
+length, height , thk = size
+xMid , yMid , zMid =  center
+
+# ===================================
+# concrete
+conc1 = box( 'concrete', [b, t , h])
+conc1.material = set_material('concrete', 'Bisque', 0.3)
+translate 'concrete' , [0  ,0,h/2]
+
+# เหล็กปลอก
+nStir = (( h + ext_bttm)/s).to_i
+
+rebar 'stir', diaStir , '51', 
+   {'A'=>t-2*cvr,'B'=>b-2*cvr,'C'=>'135',
+     'factor_Db'=>4,'factor_Lh'=>6}, 'default'
+rotate 'stir',[0,0,0],[0,1,0], 90.degrees
+translate 'stir',[xMid,yMid,zMid - h/2 - ext_bttm + 50.mm]
+make_component 'stir'
+copy 'stir',  nStir , [0.mm,0,s]
+
+# -----
+# เหล็กยืน
+a1 = ext_top + h + ext_bttm
+b1 = 300.mm
+dx = b/2 - cvr - diaStir - dia1
+dy = t/2 - cvr - diaStir - dia1
+rebar 'M1', dia1 , '11', 
+   {'A'=>a1,'B'=>b1, 'factor_Db'=>4}, 'default'
+rotate 'M1',[0,0,0],[0,0,1], 45.degrees
+translate 'M1',[xMid+dx,yMid+dy,zMid + h/2 + ext_top ]
+make_component 'M1'
+
+cpy1 = copy( 'M1' , 1 , [-dx, -dy,0] )
+rotate cpy1,[xMid,yMid,0],[0,0,1], 90.degrees
+translate cpy1,[-dx,+dy,0]
+
+cpy2 = copy( 'M1' , 1 , [-dx, -dy,0] )
+rotate cpy2,[xMid,yMid,0],[0,0,1], 180.degrees
+translate cpy2,[-dx,-dy,0]
+
+cpy3 = copy( 'M1' , 1 , [-dx, -dy,0] )
+rotate cpy3,[xMid,yMid,0],[0,0,1], -90.degrees
+translate cpy3,[dx,-dy,0]
+
+translate @@host , [0,0,300.mm]

@@ -1,0 +1,30 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2025 จักรี ติยะวงศ์สุวรรณ  -->
+  <!-- Slabs\TwoWaySlab -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none"/>
+   
+   <g stroke='blue' stroke-width='1.0'  transform='translate(5,10)'>
+       <rect x='0' y='0' width='45' height='35' fill='#F8F8FF'/>
+	   <g stroke-width="0.18" stroke='grey'>
+			<line x1='0' y1='0' x2='17.5' y2='17.5' />
+			<line x1='0' y1='35' x2='17.5' y2='17.5' />
+			
+			<line x1='45' y1='0' x2='27.5' y2='17.5' />
+			<line x1='45' y1='35' x2='27.5' y2='17.5' />
+			
+			<line x1='17.5' y1='17.5' x2='27.5' y2='17.5' />
+	   </g>
+	   
+	   <g stroke-width="0.2" stroke='maroon'>
+	       <line x1='18.5' y1='0' x2='18.5' y2='35' />
+	       <line x1='26.5' y1='0' x2='26.5' y2='35' />
+		   
+		   <line x1='0' y1='13.5' x2='45' y2='13.5' />
+		   <line x1='0' y1='21.5' x2='45' y2='21.5' />
+	   </g>
+	   
+   </g>
+</svg>

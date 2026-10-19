@@ -1,0 +1,130 @@
+{
+  "factor_DL": 1.4,
+  "factor_LL": 1.7,
+  "UniformLoad": {
+    "ow150x300": '0.15*0.3*2400*factor_DL' ,
+    "ow200x400": 268.8,
+    "wall_120": 302.4,
+    "wall_260": 655.2,
+    "wall_300": 756.0
+  },
+  "slab_loads": {
+    "wus_100": 658.0,
+    "PS2000": 658.0,
+    "PS4000": 1316.0,
+    "toilet": {
+      "S": 438.67
+    },
+    "balcony": {
+      "S": 438.67,
+      "L": 329.0
+    }
+  }
+
+  "LineA": {
+    "pos": [0.0, 8.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_300" }
+    ]
+  },
+  "LineC_12": {
+    "pos": [0.0, 0.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_300" }
+    ]
+  },
+  "Line1_AB": {
+    "pos": [0.0, 4.0, 0.0],
+    "angle": 90.0,
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:PS4000]" }
+    ]
+  },
+  "Line2_AB": {
+    "pos": [4.0, 4.0, 0.0],
+    "angle": 90.0,
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:PS4000]" }
+    ]
+  },
+  "Line1_BC": {
+    "pos": [0.0, 0.0, 0.0],
+    "angle": 90.0,
+    "length": 4.0,
+    "loads": [
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:PS4000]", "start": 0.0, "end": 2.0 },
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:toilet][:S]", "start": 2.0, "end": 4.0 },
+      { "type": "PointLoad", "p": 3603.0, "a": 2.0 }
+    ]
+  },
+  "Toilet": {
+    "pos": [2.0, 2.0, 0.0],
+    "angle": 90.0,
+    "length": 2.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:toilet][:S] + slab_loads[:PS2000]" }
+    ]
+  },
+  "Toilet_B3": {
+    "pos": [0.0, 2.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:toilet][:S]", "start": 0.0, "end": 2.0 },
+      { "type": "PartialUniformLoad", "w": "ow200x400", "start": 2.0, "end": 4.0 },
+      { "type": "PointLoad", "p": 2315.0, "a": 2.0 }
+    ]
+  },
+  "LineB_23": {
+    "pos": [4.0, 4.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_120 + slab_loads[:balcony][:L]" }
+    ]
+  },
+  "LineC_23": {
+    "pos": [4.0, 0.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_120 + slab_loads[:balcony][:L]" }
+    ]
+  },
+  "คานซอยระเบียง": {
+    "pos": [4.0, 2.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + 2 * slab_loads[:balcony][:L]" }
+    ]
+  },
+  "LineB_12": {
+    "pos": [0.0, 4.0, 0.0],
+    "length": 4.0,
+    "loads": [
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:toilet][:S]", "start": 0.0, "end": 2.0 },
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300", "start": 2.0, "end": 4.0 },
+      { "type": "PointLoad", "p": 2315.0, "a": 2.0 }
+    ]
+  },
+  "Line2_BC": {
+    "pos": [4.0, 0.0, 0.0],
+    "angle": 90.0,
+    "length": 4.0,
+    "loads": [
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:PS4000] + slab_loads[:balcony][:S]", "start": 0.0, "end": 2.0 },
+      { "type": "PartialUniformLoad", "w": "ow200x400 + wall_300 + slab_loads[:PS2000] + slab_loads[:balcony][:S]", "start": 2.0, "end": 4.0 },
+      { "type": "PointLoad", "p": 5965.0, "a": 2.0 }
+    ]
+  },
+  "Line3_BC": {
+    "pos": [8.0, 0.0, 0.0],
+    "angle": 90.0,
+    "length": 4.0,
+    "loads": [
+      { "type": "UniformLoad", "w": "ow200x400 + wall_120 + slab_loads[:balcony][:S]" },
+      { "type": "PointLoad", "p": 3634.0, "a": 2.0 }
+    ]
+  }
+}

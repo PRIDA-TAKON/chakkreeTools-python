@@ -1,0 +1,293 @@
+=begin
+    GridLine_v2026.rb
+	   9 มิย 2569 ปรับปรุงคลาสใหม่ ให้แยก data และ draw 
+				  
+       
+
+=end
+
+require 'json'
+
+module Chakkree_tools
+module Structure
+module Layout
+
+# @example ตัวอย่างการใช้งาน
+#  Sketchup::require('chakkree_tools/Structure/Layout/GridLine_v2026')
+#  gridX = {"1"=>{"coor"=>0.0, "show_label"=>true}, "1.1"=>{"coor"=>2000.mm, "show_label"=>false}, "2"=>{"coor"=>3500.mm, "show_label"=>true}, "3"=>{"coor"=>6500.mm, "show_label"=>true}}
+#  gridY = {"A"=>{"coor"=>0.0, "show_label"=>true}, "B"=>{"coor"=>1500.mm, "show_label"=>true}, "C"=>{"coor"=>5500.mm, "show_label"=>true}, "D"=>{"coor"=>7700.mm, "show_label"=>true}, "E"=>{"coor"=>10700.mm, "show_label"=>true}}
+#  grid1 = Chakkree_tools::Structure::Layout::GridData.new(gridX,gridY,{'1'=>0.mm},'2'=>3000.mm )
+class GridData
+    # @return [Hash] ข้อมูล Grid X แบบ Hash {'1'=>{'coor'=>0,'show_label'=>true},'2'=>{'coor'=>4000.mm,'show_label'=>true}} ซึ่งเป็นเส้นแนวตั้ง
+    attr_accessor :gridX
+	# @return [Hash] ข้อมูล Grid Y แบบ Hash {'A'=>{'coor'=>0,'show_label'=>true},'B'=>{'coor'=>4000.mm,'show_label'=>true}}ซึ่งเป็นเส้นแนวนอน
+    attr_accessor :gridY
+	# @return [Length] ค่าระดับ Level ของ gridline เช่น {'1'=>0.mm},'2'=>3000.mm )
+    attr_accessor :levels 
+	# @return [String] เป็นชนิดของ วงกลมป้ายชื่อเส้นกริด  'C'=circle , 'R'=rectangle , 'HEX'=หกเหลี่ยม  ,'none' 
+    attr_accessor :bubbleType
+	# @return [String] เป็นการอ้างอิงค่าระยะ แบบ 'absolute' กับ 'relative'
+	attr_accessor :typeLength
+	
+	def initialize(gridX, gridY, levels, bubbleType="C", typeLength="absolute")
+        @gridX, @gridY, @levels, @bubbleType, @typeLength = gridX, gridY, levels, bubbleType, typeLength
+    end
+	
+	def get_MinMax()
+	   maxX = @gridX.values.map { |v| v["coor"] }.max
+	   minX = @gridX.values.map { |v| v["coor"] }.min
+	   maxY = @gridY.values.map { |v| v["coor"] }.max
+	   minY = @gridY.values.map { |v| v["coor"] }.min
+	   [minX,maxX,minY,maxY]
+	end
+	
+	def compute_spans(grid_hash)
+	  values = grid_hash.values.select { |v| v["show_label"] }.map { |v| v["coor"] }
+	  return [[], 0, 0] if values.size < 2
+
+	  spans = values.each_cons(2).map { |a, b| b - a }
+	  valid_keys = grid_hash.reject { |k, _| k.start_with?('_') }
+	  min_val = valid_keys.values.map { |v| v["coor"] }.min
+	  max_val = valid_keys.values.map { |v| v["coor"] }.max
+	  start_val = valid_keys.values.first
+
+	  [spans, max_val - min_val, start_val['coor']]
+	end
+	
+	def find_first_valid_key(grid_hash)
+	  grid_hash.each do |key, value|
+		return value unless key.start_with?('_')
+	  end
+	  nil
+	end
+		
+    def to_json
+        JSON.generate({gridX:@gridX, gridY:@gridY, levels:@levels, bubbleType:@bubbleType, typeLength:@typeLength})
+    end
+
+end # class GridData
+
+# @example ตัวอย่างการใช้งาน
+#  Sketchup::require('chakkree_tools/Structure/Layout/GridLine_v2026')
+#  grp = Sketchup.active_model.entities.add_group
+#  grid_render = Chakkree_tools::Structure::Layout::GridLineRenderer.new(grp, grid1)
+#  grid_render.draw
+class GridLineRenderer
+  def initialize(parent_group, grid_data)
+    @parent = parent_group
+    @data = grid_data
+	@extendX = 2.m
+	@extendY = 2.m
+	@bubbleType = "C"
+  end
+  
+  def draw
+    prepare_layer()
+    draw_clines()
+    draw_labels()
+    draw_dimensions()
+  end
+  
+	private
+	def prepare_layer()
+		model = Sketchup.active_model
+		layers = model.layers
+		new_layer = layers.add "GRID LINE"
+		old_layer = model.active_layer
+		model.active_layer = new_layer
+		old_layer
+	end
+	
+	def draw_clines() 
+	   minX,maxX,minY,maxY =  @data.get_MinMax
+	   group = @parent
+	   # Hor Dim -------------------------------
+	   #puts '%g , %g'%[ minY.to_mm , maxY.to_mm] 
+	   @data.gridX.each do |key, value|
+		   #puts '%s , %g'%[ key , value.to_mm]
+		   for iKey  in @data.levels.keys
+			  iElev = @data.levels[iKey]
+			  group.entities.add_cline [value['coor'] , minY ,iElev] , [value['coor'] , maxY ,iElev]
+		   end
+	   end
+	   # Ver Dim Cline --------------------------------
+	   @data.gridY.each do |key, value|
+		   for iKey  in @data.levels.keys
+			  iElev = @data.levels[iKey]
+			  #group.entities.add_cline [value , minY ,iElev] , [value , maxY ,iElev]
+			  group.entities.add_cline [ minX,value['coor'] ,iElev] , [ maxX , value['coor'] ,iElev]
+		   end
+		   
+	   end
+	end
+	
+	def draw_labels()
+	   group = @parent
+	   minX,maxX,minY,maxY =  @data.get_MinMax
+	   pos = 0
+	   z = @data.levels[ @data.levels.keys[pos] ]
+	   i = 1
+	   old_key = ''
+	   @data.gridX.each do |key, value|
+		  x=value['coor']
+		  cy1 = maxY+@extendX +1500.mm
+		  cy2 = minY-@extendX -1500.mm
+		  #addTickXWithCircle( [x , cy1-1500.mm , z] , group)
+		  if value['show_label'] then
+			  addLabelBubble( [x , cy1 , z] , key , group ) 
+			  addLabelBubble( [x , cy2 , z] , key , group ) 
+			  group.entities.add_line [ x , cy1-300.mm ,z] ,  [ x , cy1-2*300.mm ,z] # top circle tick 
+			  group.entities.add_line [ x , cy2+300.mm ,z] ,  [ x , cy2+2*300.mm ,z] # top circle tick 
+		  end
+		  
+		  i+=1; old_key=key
+	   end
+	   # เส้นระยะรวม แนวนอน
+	   gapDimHor = 400.mm
+
+	   # เส้นระยะแต่ละช่วง
+	   #group.entities.add_line [ minX-extY1 ,   minY-100.mm  ,z] , 
+		#					   [ minX-extY1 ,   maxY+100.mm , z]
+	   i = 1
+	   old_key = ''
+	   @data.gridY.each do |key, value|
+		  y = value['coor']
+		  cx1 = minX-@extendY -1500.mm
+		  cx2 = maxX+@extendY+1500.mm
+		  #addTickYWithCircle( [minX-extY1 , y , z] , group)
+		  if value['show_label'] then
+			  addLabelBubble( [ cx1 , y , z] , key , group ) 
+			  addLabelBubble( [ cx2 , y , z] , key , group ) 
+			  group.entities.add_line [ cx1+300.mm , y ,z] ,  [ cx1+2*300.mm , y ,z]
+			  group.entities.add_line [ cx2-300.mm , y ,z] ,  [ cx2-2*300.mm , y ,z]
+		  end
+		  if i>1
+			 y2 = y; y1 = @data.gridY[old_key]['coor']
+			 #dimText = (y2-y1).abs.to_l
+			 #addText90( [  minX-extY1+50.mm, (y1+y2)/ 2 -200.mm  ,z] , dimText.to_s, 200.mm , group)
+		  end
+		  i+=1; old_key=key
+	   end
+	end
+	
+	def draw_dimensions()
+	   group = @parent
+	   minX,maxX,minY,maxY =  @data.get_MinMax
+	   #puts "get_MinMax = " + get_MinMax.to_s
+	   # เส้นระยะรวม แนวดิ่ง	   
+	   gap = 400.mm
+	   draw_horizontal_dimensions(group, minX, maxX, minY, maxY, gap)
+	   draw_vertical_dimensions(group, minX, maxX, minY, maxY, gap)
+
+	end
+	
+	def draw_horizontal_dimensions(group, minX, maxX, minY, maxY, gap)
+	  dimX_list, span_x, x_start = @data.compute_spans(@data.gridX)
+	  return if dimX_list.empty?
+	  #puts "dimX_list:" + dimX_list.to_s
+	  #puts "span_x:" + span_x.to_s
+	  #puts "x_start:" + x_start.to_s
+	  
+	  # Top
+	  draw_dimension_group(group, "DIMX1", dimX_list, [minX, maxY + @extendY, 0])
+	  draw_dimension_group(group, "DIMX1_TOTAL", [span_x], [x_start, maxY + @extendY + gap, 0])
+
+	  # Bottom
+	  draw_dimension_group(group, "DIMX2", dimX_list, [minX, minY - @extendY, 0])
+	  draw_dimension_group(group, "DIMX2_TOTAL", [span_x], [x_start, minY - @extendY - gap, 0])
+	end
+	
+	def draw_vertical_dimensions(group, minX, maxX, minY, maxY, gap)
+	  dimY_list, span_y, y_start = @data.compute_spans(@data.gridY)
+	  return if dimY_list.empty?
+
+	  # Left
+	  puts "dimY_list = " + dimY_list.to_s
+	  grpDim = draw_dimension_group(group, "DIMY1", dimY_list, [minY, 0, 0]) # ระยะซอย
+	  grpDim.transform! Geom::Transformation.rotation([0, 0, 0], Z_AXIS, 90.degrees)
+	  grpDim.transform! Geom::Transformation.translation([minX - @extendX, 0, 0])
+	  
+	  #puts "[span_y] = [" + span_y.to_s + "]"
+	  grpDim =  draw_dimension_group(group, "DIMY1_TOTAL", [span_y], [y_start, gap, 0]) # ระยะรวม
+	  grpDim.transform! Geom::Transformation.rotation([0, 0, 0], Z_AXIS, 90.degrees)
+	  grpDim.transform! Geom::Transformation.translation([minX - @extendX, 0, 0])
+
+	  # Right
+	  #puts "@gridY.reverse_each.to_h = " +@gridY.reverse_each.to_h.to_s
+	  y_start_right = @data.find_first_valid_key(@data.gridY.reverse_each.to_h)['coor']
+	  #puts "y_start_right = " + y_start_right.to_s
+	  ## เส้นบอกระยะ แบ่ง span
+	  grpDim = draw_dimension_group(group, "DIMY2", dimY_list.reverse, [-maxY , 0, 0]) # ระยะซอย
+	  grpDim.transform! Geom::Transformation.rotation([0, 0, 0], Z_AXIS, -90.degrees)
+	  
+	  puts "maxY, minY = %gmm, %gmm" % [maxY.to_mm, minY.to_mm]
+	  grpDim.transform! Geom::Transformation.translation([ maxX+ @extendX, 0, 0])
+	  
+	  ## เส้นบอกระยะรวม
+	  grpDim = draw_dimension_group(group, "DIMY2_TOTAL", [span_y], [ -maxY , gap, 0]) # ระยะรวม
+	  #grpDim.transform! Geom::Transformation.translation([-maxY, 0, 0])
+	  grpDim.transform! Geom::Transformation.rotation([0, 0, 0], Z_AXIS, -90.degrees)
+	  
+	  grpDim.transform! Geom::Transformation.translation([maxX + @extendX, 0, 0])
+	end
+	
+	def addLabelBubble( pnt , text ,  grp )
+	   r = 300.mm
+	   x = pnt[0];  y = pnt[1]; z = pnt[2];
+	   #puts "Type=" + @bubbleType
+	   #puts @bubbleType.class
+	   if @bubbleType == "C" then
+		  bubble = grp.entities.add_circle( [ x , y ,z] , [0,0,1] , r , 24 )
+	   elsif @bubbleType == "R" then
+		  ft=0.8
+		  point1 = Geom::Point3d.new(x-r*ft, y-r*ft, z)
+		  point2 = Geom::Point3d.new(x+r*ft, y-r*ft, z)
+		  point3 = Geom::Point3d.new(x+r*ft, y+r*ft, z)
+		  point4 = Geom::Point3d.new(x-r*ft, y+r*ft, z)
+		  bubble = grp.entities.add_edges(point1, point2, point3, point4,point1)
+	   elsif @bubbleType == "HEX" then
+		  ft=1
+		  r2 = r*ft
+		  point1 = Geom::Point3d.new(x-r2, y, z)
+		  point2 = Geom::Point3d.new(x-r2*Math.cos(60.degrees), y-r2*Math.sin(60.degrees), z)
+		  point3 = Geom::Point3d.new(x+r2*Math.cos(60.degrees), y-r2*Math.sin(60.degrees), z)
+		  point4 = Geom::Point3d.new(x+r2, y, z)
+		  point5 = Geom::Point3d.new(x+r2*Math.cos(60.degrees), y+r2*Math.sin(60.degrees), z)
+		  point6 = Geom::Point3d.new(x-r2*Math.cos(60.degrees), y+r2*Math.sin(60.degrees), z)
+		  
+		  bubble = grp.entities.add_edges(point1, point2, point3, point4, point5, point6,point1)
+	   end
+	   addText( pnt , text , 300.mm , grp)
+	end #addLabelBubble
+	
+	def addText(pnt , text , fontSize , grp)
+	   Sketchup::require('chakkree_tools/Draw2D/Base/Text2D')
+	   x = pnt[0];  y = pnt[1]; z = pnt[2];
+	   grouptext = grp.entities.add_group
+	   grouptext.name=text
+	   text2D= Draw2D::Base::Text2D.new
+	   text2D.draw_text text , grouptext ,  fontSize
+	   # เก็บข้อมูล ลง dict
+	   grouptext.set_attribute "chakkree_tools", "type", "Text2D"
+	   grouptext.set_attribute "chakkree_tools", "data", JSON.generate( {"text"=>text , "font_height"=> fontSize})
+	   tr = Geom::Transformation.new([x-100.mm, y-150.mm, z])
+	   grouptext.transform! tr
+	   return grouptext
+	end # addText
+	
+	def draw_dimension_group(parent_group, name, spans, origin)
+	  Sketchup::require('chakkree_tools/Draw2D/Base/DrawDimension')
+	  grp = parent_group.entities.add_group
+	  grp.name = name
+	  #puts Array.new(spans.length, 'o').to_s
+	  dim = Draw2D::Base::Dimension.new(spans, Array.new(spans.length + 1, 'o'))
+	  dim.origin = origin
+	  dim.drawDimension(grp)
+	  grp
+	end
+  
+end # class GridLineRenderer
+
+end # module Layout
+end # module Structure
+end # module Chakkree_tools
