@@ -65,37 +65,101 @@ class ChakkreeToolsPlugin(Tool):
 
     def get_toolbar_registration(self) -> Dict[str, Any]:
         """
-        Registers toolbar actions for IngeTrazo.
+        Registers toolbar actions for IngeTrazo matching the original Chakkree Tools UI.
         """
+        icons_dir = Path(__file__).resolve().parent / "resources" / "icons"
         return {
-            "toolbar_name": "Chakkree Tools (RC)",
+            "toolbar_name": "chakkree_tools",
             "actions": [
                 {
-                    "name": "PileFooting",
-                    "label": "Pile Cap",
-                    "tooltip": "Generate 1-9 Piles Pile Cap & Rebars",
+                    "name": "RebarTools",
+                    "label": "Rebar Tools",
+                    "tooltip": "เครื่องมือเหล็กเสริม (Rebar Tools) - ดัดขอและสร้างเหล็กเสริม 3D",
+                    "icon": str(icons_dir / "RebarTools.svg"),
+                    "action": self.cmd_rebar_tools,
+                },
+                {
+                    "name": "FootingTools",
+                    "label": "Footings",
+                    "tooltip": "เครื่องมือฐานราก (Footing Tools) - ฐานรากเสาเข็ม 1-9 ต้น และฐานแผ่",
+                    "icon": str(icons_dir / "FootingTools.svg"),
                     "action": self.cmd_create_pile_cap,
                 },
                 {
-                    "name": "Column",
-                    "label": "RC Column",
-                    "tooltip": "Generate RC Column with Longitudinal & Tie Rebars",
-                    "action": self.cmd_create_column,
-                },
-                {
-                    "name": "Beam",
-                    "label": "RC Beam",
-                    "tooltip": "Generate RC Beam with Rebars & Multi-zone Stirrups",
+                    "name": "BeamTools",
+                    "label": "Beams",
+                    "tooltip": "เครื่องมือคาน ค.ส.ล. (Beam Tools) - คานและเหล็กปลอกหลายระยะ",
+                    "icon": str(icons_dir / "BeamTools.svg"),
                     "action": self.cmd_create_beam,
                 },
                 {
-                    "name": "ExportDebim",
-                    "label": "Export .debim",
-                    "tooltip": "Export designed structural model to .debim manifest",
+                    "name": "ColumnTools",
+                    "label": "Columns",
+                    "tooltip": "เครื่องมือเสา ค.ส.ล. (Column Tools) - เสาสี่เหลี่ยม/กลม เหล็กยืน 4-16 เส้น",
+                    "icon": str(icons_dir / "ColumnTools.svg"),
+                    "action": self.cmd_create_column,
+                },
+                {"name": "separator_1", "type": "separator"},
+                {
+                    "name": "GridLine",
+                    "label": "Grid Lines",
+                    "tooltip": "เครื่องมือกริตไลน์ (GridLine v2026) - ระบบแกน X/Y และระดับชั้น",
+                    "icon": str(icons_dir / "GridLine.svg"),
+                    "action": self.cmd_create_grids,
+                },
+                {"name": "separator_2", "type": "separator"},
+                {
+                    "name": "TakeOff",
+                    "label": "QTO Take-off",
+                    "tooltip": "ถอดปริมาณ คอนกรีต ไม้แบบ เหล็กเสริม และ Bar Bending Schedule",
+                    "icon": str(icons_dir / "TakeOff.svg"),
+                    "action": self.cmd_qto_takeoff,
+                },
+                {
+                    "name": "AnalysisRC",
+                    "label": "RC Analysis",
+                    "tooltip": "วิเคราะห์กำลังรับแรงหน้าตัด ค.ส.ล. และส่งออก .debim",
+                    "icon": str(icons_dir / "AnalysisTool.svg"),
                     "action": self.cmd_export_debim,
+                },
+                {"name": "separator_3", "type": "separator"},
+                {
+                    "name": "ConfigColorRebar",
+                    "label": "Config Colors",
+                    "tooltip": "ตั้งค่าสีเหล็กเสริมแยกตามขนาดเส้นผ่านศูนย์กลาง (RB6, RB9, DB12-DB32)",
+                    "icon": str(icons_dir / "ConfigColorRebar.svg"),
+                    "action": self.cmd_config_colors,
+                },
+                {"name": "separator_4", "type": "separator"},
+                {
+                    "name": "About",
+                    "label": "About",
+                    "tooltip": "เกี่ยวกับ Chakkree Tools (Python Edition) © อ.จักรี ติยะวงศ์สุวรรณ",
+                    "icon": str(icons_dir / "About.svg"),
+                    "action": self.cmd_about,
                 },
             ],
         }
+
+    def cmd_rebar_tools(self) -> None:
+        """Handler for Rebar Tools."""
+        pass
+
+    def cmd_create_grids(self) -> None:
+        """Handler for GridLine creation."""
+        pass
+
+    def cmd_qto_takeoff(self) -> None:
+        """Handler for QTO TakeOff."""
+        pass
+
+    def cmd_config_colors(self) -> None:
+        """Handler for Rebar Colors Configuration."""
+        pass
+
+    def cmd_about(self) -> None:
+        """Handler for About info."""
+        pass
 
     def cmd_create_pile_cap(self, pile_count: int = 1) -> Any:
         from chakkree_tools.rc.footing import PileCap

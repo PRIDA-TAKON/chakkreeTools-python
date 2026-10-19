@@ -1,0 +1,17 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="100" height="100" viewBox="0 0 100 100">
+  <!-- สงวนลิขสิทธิ์ ©2025 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   <g stroke='blue' stroke-width='2'  transform='translate(10,20)'>
+      <rect x="0" y="0" width="80" height="60" fill="white"/>
+	  <rect x="0" y="0" width="80" height="20" fill="DarkSeaGreen"/>
+      <line x1="0" x2="80" y1="33" y2="33" stroke-width='1'/>
+      <line x1="0" x2="80" y1="46" y2="46" stroke-width='1'/>
+
+      <line x1="20" x2="20" y1="0" y2="60" stroke-width='1'/>
+      <line x1="40" x2="40" y1="20" y2="60" stroke-width='1'/>
+      <line x1="60" x2="60" y1="20" y2="60" stroke-width='1'/>
+    </g>
+</svg>

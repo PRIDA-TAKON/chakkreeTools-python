@@ -20,7 +20,29 @@
 
 ---
 
-## ⚡ จุดเด่นและความสามารถ (Key Capabilities)
+## 🖥️ หน้าต่างแถบเครื่องมือดั้งเดิม (Original Toolbar UI)
+
+![Chakkree Tools Toolbar](docs/images/original_toolbar_ui.png)
+
+แถบเครื่องมือหลักของ **chakkree_tools** ประกอบด้วยชุดคำสั่งเรียงตามลำดับจากซ้ายไปขวา:
+
+| ลำดับ | ไอคอน | ชื่อคำสั่ง | คำอธิบายการทำงานใน Python / IngeTrazo |
+| :---: | :---: | :--- | :--- |
+| **1** | `RebarTools.svg` | **Rebar Tools** | เครื่องมือดัดปลายเหล็กขอ 90°/135°/180°, สร้างชุดเหล็กเสริม 3D และตัวคูณระยะทาบ |
+| **2** | `FootingTools.svg` | **Footing Tools** | สร้างฐานรากเสาเข็ม 1–9 ต้น (`1Pile` – `9Piles`) และฐานรากแผ่ พร้อมเหล็กตะกร้อและเสาตอม่อ |
+| **3** | `BeamTools.svg` | **Beam Tools** | สร้างคาน ค.ส.ล. เหล็กบน-ล่าง-พิเศษ และเหล็กปลอก 1 หรือ 3 ช่วงระยะ (`StirrupPattern`) |
+| **4** | `ColumnTools.svg` | **Column Tools** | สร้างเสาสี่เหลี่ยม/กลม เหล็กยืน 4, 6, 8, 14, 16 เส้น พร้อมเหล็กปลอกและระยะทาบต่อท่อน |
+| — | *Separator* | — | — |
+| **5** | `GridLine.svg` | **GridLine v2026** | ระบบผังกริตไลน์ แกน X/Y พร้อมบอลลูนบอกระยะ และระดับชั้น (Elevations) |
+| — | *Separator* | — | — |
+| **6** | `TakeOff.svg` | **QTO Take-off** | รายการคำนวณถอดปริมาณ คอนกรีต, ไม้แบบ, เหล็กเสริม, ดินขุด และ Bar Bending Schedule (BBS) |
+| **7** | `AnalysisTool.svg` | **RC Analysis / debim** | ตรวจสอบกำลังรับแรงหน้าตัด ค.ส.ล. และส่งออกไฟล์ `.debim` ไปยังโปรเจกต์ debim |
+| — | *Separator* | — | — |
+| **8** | `ConfigColorRebar.svg`| **Config Colors** | ตั้งค่าสีเหล็กเสริมแยกตามขนาดเส้นผ่านศูนย์กลาง (RB6, RB9, DB12, DB16, DB20, DB25...) |
+| — | *Separator* | — | — |
+| **9** | `About.svg` | **About** | ข้อมูลลิขสิทธิ์และรุ่นของโปรแกรม © อ.จักรี ติยะวงศ์สุวรรณ |
+
+---
 
 1. **Native IngeTrazo Extension:**
    - ใช้งานเป็นปลั๊กอินในโปรแกรมออกแบบ 3D **IngeTrazo** (`%APPDATA%\ingetrazo\plugins\chakkree_tools`)
