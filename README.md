@@ -18,11 +18,6 @@
 
 การพอร์ตสู่ Python ในครั้งนี้เป็นการตอบรับคำท้าทายและเจตนารมณ์ของผู้พัฒนาต้นฉบับ เพื่อให้เครื่องมือวิศวกรรมโครงสร้างไทยสามารถก้าวข้ามข้อจำกัดของซอฟต์แวร์แบบปิด ไปสู่ **Modern Open-Source CAD Ecosystem** และขับเคลื่อนงานพัฒนาต่อด้วย AI (Jules AI / Antigravity)
 
-### ☕ ร่วมสนับสนุนผู้พัฒนาต้นฉบับ (Support the Original Creator)
-
-หากท่านชื่นชอบและเห็นประโยชน์ของส่วนขยาย **Chakkree Tools** สามารถร่วมสนับสนุนผลงานและติดตามเวอร์ชันสำหรับ SketchUp ของ อ.จักรี ติยะวงศ์สุวรรณ ได้โดยตรงที่:
-👉 **[เว็บไซต์ทางการของ Chakkree Tools (Official Extension Page)](https://sites.google.com/view/learn-sketchup/myextension/chakkree_tools-v0-4?authuser=0)**
-
 ---
 
 ## 🖥️ หน้าต่างแถบเครื่องมือดั้งเดิม (Original Toolbar UI)
