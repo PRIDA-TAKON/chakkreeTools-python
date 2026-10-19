@@ -24,38 +24,40 @@ def install():
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
 
-    dest_dir.mkdir(parents=True, exist_ok=True)
-
     # Copy entire chakkree_tools package into destination
-    shutil.copytree(src_pkg, dest_dir / "chakkree_tools", dirs_exist_ok=True)
+    shutil.copytree(src_pkg, dest_dir)
 
-    # Copy metadata.json and plugin.py to root of plugin directory for IngeTrazo discovery
-    meta_src = src_pkg / "ingetrazo_plugin" / "metadata.json"
-    plugin_src = src_pkg / "ingetrazo_plugin" / "plugin.py"
-
-    shutil.copy2(meta_src, dest_dir / "metadata.json")
-
-    # Create root plugin.py that exports Plugin
-    root_plugin_code = """\"\"\"
-IngeTrazo Plugin Entry Point for chakkree_tools.
-\"\"\"
+    # Write root __init__.py that ensures sys.path has plugins directory and exports setup
+    init_code = '''"""
+Chakkree Tools IngeTrazo Extension
+Parametric RC Structural Tools & .debim Building-as-Code integration.
+"""
 import sys
 from pathlib import Path
 
-# Ensure plugin directory is on path
-plugin_dir = Path(__file__).resolve().parent
-if str(plugin_dir) not in sys.path:
-    sys.path.insert(0, str(plugin_dir))
+# Ensure plugin directory and parent plugins directory are on sys.path
+_pkg_dir = Path(__file__).resolve().parent
+_plugins_dir = _pkg_dir.parent
+if str(_pkg_dir) not in sys.path:
+    sys.path.insert(0, str(_pkg_dir))
+if str(_plugins_dir) not in sys.path:
+    sys.path.insert(0, str(_plugins_dir))
 
-from chakkree_tools.ingetrazo_plugin.plugin import ChakkreeToolsPlugin
+from chakkree_tools.ingetrazo_plugin.plugin import ChakkreeToolsPlugin, setup
 
-# IngeTrazo plugin factory
-Plugin = ChakkreeToolsPlugin
-"""
-    (dest_dir / "plugin.py").write_text(root_plugin_code, encoding="utf-8")
-    (dest_dir / "__init__.py").write_text("", encoding="utf-8")
+__version__ = "0.1.0"
+__author__ = "Chakkree Tiyawongsuwan & PRIDA-TAKON"
 
-    # Copy icons
+__all__ = ["ChakkreeToolsPlugin", "setup", "__version__", "__author__"]
+'''
+    (dest_dir / "__init__.py").write_text(init_code, encoding="utf-8")
+
+    # Copy metadata.json to dest_dir root for IngeTrazo extension info
+    meta_src = src_pkg / "ingetrazo_plugin" / "metadata.json"
+    if meta_src.exists():
+        shutil.copy2(meta_src, dest_dir / "metadata.json")
+
+    # Also copy resources/icons directly to dest_dir/resources
     icons_src = src_pkg / "ingetrazo_plugin" / "resources"
     if icons_src.exists():
         shutil.copytree(icons_src, dest_dir / "resources", dirs_exist_ok=True)
@@ -65,3 +67,4 @@ Plugin = ChakkreeToolsPlugin
 
 if __name__ == "__main__":
     install()
+

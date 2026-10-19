@@ -162,3 +162,38 @@ def test_plugin_cmd_creators(qapp):
     b = plugin.cmd_create_beam(width=0.25, depth=0.5, length=5.0, show_dialog=False)
     assert b.length == 5.0
     assert len(plugin.active_elements) == 3
+
+
+def test_plugin_setup(qapp):
+    from chakkree_tools.ingetrazo_plugin.plugin import setup
+
+    class MockIngeTrazoApp:
+        def __init__(self):
+            self.menus = {}
+            self.actions = []
+
+        def add_menu(self, title):
+            class MockSubMenu:
+                def __init__(self):
+                    self.items = []
+
+                def addAction(self, label, cb=None):
+                    self.items.append(label)
+
+                def addSeparator(self):
+                    self.items.append("---")
+
+            sub = MockSubMenu()
+            self.menus[title] = sub
+            return sub
+
+        def add_menu_action(self, title, cb, shortcut=None, tip=None):
+            self.actions.append(title)
+
+    app = MockIngeTrazoApp()
+    plugin = setup(app)
+    assert plugin is not None
+    assert "Chakkree Tools" in app.menus
+    assert "Create Pile Cap (1-9 Piles)..." in app.menus["Chakkree Tools"].items
+    assert len(app.actions) > 0
+
