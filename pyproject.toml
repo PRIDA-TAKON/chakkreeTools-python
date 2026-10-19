@@ -9,7 +9,7 @@ description = "Python port & reverse-engineering of Chakkree Tools for IngeTrazo
 readme = "README.md"
 authors = [
     { name = "Chakkree Tiyawongsuwan", email = "author@original.sketchup.plugin" },
-    { name = "PRIDA-TAKON", email = "contributor@chakkreeTools-python" }
+    { name = "PRIDA-TAKON", email = "contributor@chakkreetools.com" }
 ]
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -25,7 +25,10 @@ gui = [
     "PySide6>=6.5.0",
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["chakkree_tools*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-pythonpath = ["."]
