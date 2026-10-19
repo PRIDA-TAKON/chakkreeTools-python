@@ -161,7 +161,27 @@ class ChakkreeToolsPlugin(Tool):
         """Handler for About info."""
         pass
 
-    def cmd_create_pile_cap(self, pile_count: int = 1) -> Any:
+    def cmd_create_pile_cap(
+        self, pile_count: int = 1, show_dialog: bool = True, parent: Optional[Any] = None
+    ) -> Any:
+        """
+        Action to create Footing / Pile Cap. Opens FootingDialog if show_dialog is True and PySide6 is available.
+        """
+        if show_dialog:
+            try:
+                from PySide6.QtWidgets import QApplication, QDialog
+                from chakkree_tools.ingetrazo_plugin.ui.footing_dialog import FootingDialog
+
+                if QApplication.instance() is not None:
+                    dlg = FootingDialog(parent=parent)
+                    if dlg.exec() == QDialog.Accepted:
+                        f = dlg.get_footing()
+                        self.active_elements.append(f)
+                        return f
+                    return None
+            except ImportError:
+                pass
+
         from chakkree_tools.rc.footing import PileCap
         f = PileCap.create_n_piles(
             id_str=f"F_{len(self.active_elements) + 1}",
@@ -170,7 +190,32 @@ class ChakkreeToolsPlugin(Tool):
         self.active_elements.append(f)
         return f
 
-    def cmd_create_column(self, width: float = 0.3, depth: float = 0.3, height: float = 3.5) -> Any:
+    def cmd_create_column(
+        self,
+        width: float = 0.3,
+        depth: float = 0.3,
+        height: float = 3.5,
+        show_dialog: bool = True,
+        parent: Optional[Any] = None,
+    ) -> Any:
+        """
+        Action to create RC Column. Opens ColumnDialog if show_dialog is True and PySide6 is available.
+        """
+        if show_dialog:
+            try:
+                from PySide6.QtWidgets import QApplication, QDialog
+                from chakkree_tools.ingetrazo_plugin.ui.column_dialog import ColumnDialog
+
+                if QApplication.instance() is not None:
+                    dlg = ColumnDialog(parent=parent)
+                    if dlg.exec() == QDialog.Accepted:
+                        c = dlg.get_column()
+                        self.active_elements.append(c)
+                        return c
+                    return None
+            except ImportError:
+                pass
+
         from chakkree_tools.rc.column import Column
         c = Column(
             id=f"C_{len(self.active_elements) + 1}",
@@ -181,7 +226,32 @@ class ChakkreeToolsPlugin(Tool):
         self.active_elements.append(c)
         return c
 
-    def cmd_create_beam(self, width: float = 0.2, depth: float = 0.4, length: float = 4.0) -> Any:
+    def cmd_create_beam(
+        self,
+        width: float = 0.2,
+        depth: float = 0.4,
+        length: float = 4.0,
+        show_dialog: bool = True,
+        parent: Optional[Any] = None,
+    ) -> Any:
+        """
+        Action to create RC Beam. Opens BeamDialog if show_dialog is True and PySide6 is available.
+        """
+        if show_dialog:
+            try:
+                from PySide6.QtWidgets import QApplication, QDialog
+                from chakkree_tools.ingetrazo_plugin.ui.beam_dialog import BeamDialog
+
+                if QApplication.instance() is not None:
+                    dlg = BeamDialog(parent=parent)
+                    if dlg.exec() == QDialog.Accepted:
+                        b = dlg.get_beam()
+                        self.active_elements.append(b)
+                        return b
+                    return None
+            except ImportError:
+                pass
+
         from chakkree_tools.rc.beam import Beam
         b = Beam(
             id=f"B_{len(self.active_elements) + 1}",
