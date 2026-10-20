@@ -6,10 +6,10 @@ and ChakkreeToolsPlugin UI integration.
 import os
 import pytest
 
-# Skip test suite if PySide6 optional dependency is not installed
-pyside6 = pytest.importorskip("PySide6")
-
-from PySide6.QtWidgets import QApplication, QDialog
+# Skip test suite if PySide6 or system GL/EGL GUI libraries are not available
+QtWidgets = pytest.importorskip("PySide6.QtWidgets")
+QApplication = QtWidgets.QApplication
+QDialog = QtWidgets.QDialog
 
 # Ensure Qt offscreen platform for headless test environment
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
