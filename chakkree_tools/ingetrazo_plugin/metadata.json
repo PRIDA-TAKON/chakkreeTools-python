@@ -4,5 +4,5 @@
   "version": "0.1.0",
   "description": "Parametric Reinforced Concrete Structure & Rebar Utilities for IngeTrazo",
   "author": "Chakkree Tiyawongsuwan & PRIDA-TAKON",
-  "min_ingetrazo_version": "0.5.8"
+  "min_ingetrazo_version": "0.5.0"
 }
