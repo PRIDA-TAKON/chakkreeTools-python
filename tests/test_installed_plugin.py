@@ -9,7 +9,8 @@ import os
 import pytest
 import importlib.util
 
-APPDATA_PLUGINS = Path(os.environ["APPDATA"]) / "ingetrazo" / "plugins"
+appdata_val = os.environ.get("APPDATA")
+APPDATA_PLUGINS = (Path(appdata_val) / "ingetrazo" / "plugins") if appdata_val else None
 
 class MockMenu:
     def __init__(self, name: str):
