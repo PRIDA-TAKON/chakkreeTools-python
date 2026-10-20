@@ -1,0 +1,23 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none" stroke="none"/>
+   <g transform='translate(27.5,27.5)' style="stroke:black;stroke-width:2;">
+       <rect x="-12" y="-12" width="24" height="24" style="stroke:grey;stroke-width:4; fill:none;"/>
+	   <!--top-->
+       <rect x="-3" y="-15" width="6" height="6" style="fill:white;"/>
+       <rect x="-15" y="-15" width="6" height="6" style="fill:white;"/>
+       <rect x="9" y="-15" width="6" height="6" style="fill:white;"/>
+	   <!-- middle -->
+	   <rect x="-15" y="-3" width="6" height="6" style="fill:white;"/>
+	   <rect x="-3" y="-3" width="6" height="6" style="fill:blue;"/>
+	   <rect x="9" y="-3" width="6" height="6" style="fill:white;"/>
+	   <!--bottom-->
+       <rect x="-3" y="9" width="6" height="6" style="fill:white;"/>
+       <rect x="-15" y="9" width="6" height="6" style="fill:white;"/>
+       <rect x="9" y="9" width="6" height="6" style="fill:white;"/>
+   </g>
+
+</svg>

@@ -1,0 +1,12 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none"/>
+   
+   <circle cx='27.5' cy='27.5' r='18' fill='#F8F8FF' stroke='blue' stroke-width='2'/>
+   
+   <rect x='26' y='23' width='3' height='16' fill='blue' stroke='blue'/>
+   <circle cx='28' cy='17' r='2' fill='blue' stroke='blue' />
+</svg>

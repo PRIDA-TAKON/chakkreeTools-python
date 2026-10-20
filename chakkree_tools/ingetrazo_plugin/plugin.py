@@ -706,16 +706,26 @@ class ChakkreeToolsPlugin(Tool):
         return res
 
 
-def setup(app: Any) -> ChakkreeToolsPlugin:
+def register_plugin(app: Optional[Any] = None) -> ChakkreeToolsPlugin:
     """
-    Official setup(app) entry point called by IngeTrazo extension loader.
-    Registers menus, actions, and the native PySide6 toolbar in IngeTrazo.
+    Entry point function called by IngeTrazo plugin loader.
     """
     try:
         plugin = ChakkreeToolsPlugin(app=app)
     except Exception as e:
         print(f"[chakkree_tools] Error initializing plugin: {e}")
         plugin = ChakkreeToolsPlugin(app=None)
+    if app is not None and hasattr(app, "register_tool"):
+        app.register_tool(plugin)
+    return plugin
+
+
+def setup(app: Any) -> ChakkreeToolsPlugin:
+    """
+    Official setup(app) entry point called by IngeTrazo extension loader.
+    Registers menus, actions, and the native PySide6 toolbar in IngeTrazo.
+    """
+    plugin = register_plugin(app)
 
     # 1. Register Menus under Extensions -> Chakkree Tools
     menu = None

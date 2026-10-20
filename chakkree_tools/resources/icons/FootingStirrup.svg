@@ -1,0 +1,12 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none" stroke="none"/>
+   <g transform='translate(10,10)' style="stroke:blue;">
+       <path d='M 12 0 h -7 q -5 0 -5 5 v 22 q 0 5 5 5 h 22 q 5 0 5 -5 v -17 q 0 -5 -5 -5 h-17 q -5 0 -5 5 v 7'  style="stroke-width:3.5;fill:none;"/>
+       
+   </g>
+
+</svg>

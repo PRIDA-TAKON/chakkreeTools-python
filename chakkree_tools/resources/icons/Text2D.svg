@@ -1,0 +1,34 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  <defs>
+    <filter id="f2" x="0" y="0" width="140%" height="130%">
+        <feOffset result="offOut" in="SourceGraphic" dx="1" dy="1" />
+        <feGaussianBlur result="blurOut" in="offOut" stdDeviation="2" />
+        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+    </filter>
+  </defs>
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   
+   <g stroke='black' stroke-width='2'  transform='translate(4,10)'>
+      <g stroke-linecap="round" stroke-width='4' stroke='darkblue'>
+        <line x1='0' x2='24'  y1='0' y2='0' />
+        <line x1='12' x2='12'  y1='0' y2='30' />
+	  </g>
+	  <g transform='translate(18,8)' stroke-linecap="round">
+         <line x1='0' x2='9'  y1='0' y2='0' />
+         <line x1='0' x2='6'  y1='6' y2='6' />
+         <line x1='0' x2='9'  y1='14' y2='14' />
+         <line x1='1' x2='1'  y1='0' y2='14' />
+      </g>
+	  <g id='X' transform='translate(31,8)'> 
+         <line x1='0' x2='7'  y1='0' y2='14' stroke-linecap="round"/>
+         <line x1='0' x2='7'  y1='14' y2='0' stroke-linecap="round"/>
+      </g>
+	  <g transform='translate(43,8)' stroke-linecap="round">
+         <path d='M 0 -5 v 19 h 3' fill='none'/>
+         <line x1='-2' x2='2'  y1='0' y2='0' />
+      </g>
+  </g>
+</svg>

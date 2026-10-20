@@ -1,0 +1,41 @@
+<!-- icon.svg — Import JSON to Rebar พร้อมข้อความกลางกระดาษ -->
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" 
+     viewBox="0 0 30 30" fill="none" stroke="Maroon">
+  <title>Import JSON to Rebar</title>
+  
+  <rect x="0" y="0" width="30" height="30"  stroke="none" fill="none" />
+  
+  <g transform="translate(0,3)">
+	  <!-- ไฟล์ JSON -->
+	  <g transform="translate(-3,-3)" stroke-width="1.1">
+	    <g transform="scale(1.2)">
+		  <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"
+				 stroke-linejoin="round"/>
+		  <path d="M14 3v5h5"  stroke-linecap="round"/>
+	    </g>
+	  </g>
+	  
+	  <!-- ลูกศร -->
+	  <path d="M9 17 h6" stroke-width="1.2" stroke-linecap="round"/>
+	  <path d="M14 15l2 2-2 2" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+	  <!-- Rebar (เหล็กข้ออ้อย) -->
+	  <!-- ใช้เส้นหลัก -->
+	  <g transform="translate(2.5,-6)">
+	    <g transform="scale(1.2,1.5)">
+		    <path d="M18 6 v12 q 1 1 2 0 v-12 q -1 -1 -2 0 " fill="white" stroke-width="0.6" stroke-linecap="round"/>
+		  
+		    <!-- เพิ่มลายข้ออ้อยเป็นเส้นเฉียงเล็ก ๆ -->
+		    <path d="M17.5 7 l 3 1.5" stroke-width="0.7" stroke-linecap="round"/>
+		    <path d="M17.5 9 l 3 1.5" stroke-width="0.7" stroke-linecap="round"/>
+		    <path d="M17.5 11 l 3 1.5" stroke-width="0.7" stroke-linecap="round"/>
+		    <path d="M17.5 13 l 3 1.5" stroke-width="0.7" stroke-linecap="round"/>
+		    <path d="M17.5 15 l 3 1.5" stroke-width="0.7" stroke-linecap="round"/> 
+		  </g>
+		</g>
+
+	  <!-- ข้อความ JSON กลางกระดาษ -->
+	  <text x="11.3" y="13" text-anchor="middle" font-size="5.2" 
+        stroke = "none" fill="Maroon" font-family="Arial, sans-serif">JSON</text>
+  </g>
+</svg>

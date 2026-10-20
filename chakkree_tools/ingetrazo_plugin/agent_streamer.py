@@ -12,9 +12,15 @@ try:
     def _dump_yaml_str(data: Any) -> str:
         return yaml.dump(data, sort_keys=False, allow_unicode=True)
 except ImportError:
-    from chakkree_tools.exporter.pure_yaml import dump_yaml as _dump_yaml_str
+    try:
+        from chakkree_tools.exporter.pure_yaml import dump_yaml as _dump_yaml_str
+    except ImportError:
+        from ..exporter.pure_yaml import dump_yaml as _dump_yaml_str
 
-from chakkree_tools.exporter.debim_exporter import DebimExporter
+try:
+    from chakkree_tools.exporter.debim_exporter import DebimExporter
+except ImportError:
+    from ..exporter.debim_exporter import DebimExporter
 
 
 class AgentStreamerError(Exception):

@@ -1,0 +1,18 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+  <g stroke='red' stroke-width='2'>
+      
+	  <path  d='M 19 17 h -5 q -5 0 -5 5 q 0 5 5 5 h 29
+	            q 5 0 5 -5 q 0 -5 -5 -5 h -5' 
+	        fill='none' stroke-width='3'  stroke='red'/>
+	  
+	  <line x1='10' x2='45' y1='40' y2='40' stroke-width='2'   stroke='blue'/>
+	  <circle cx='10' cy='40' r='3' fill='red' stroke='blue' stroke-width='1'/>
+	  <circle cx='45' cy='40' r='3' fill='red' stroke='blue' stroke-width='1'/>
+
+  </g>
+</svg>

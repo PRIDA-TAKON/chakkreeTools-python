@@ -1,0 +1,42 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none" stroke="none"/>
+   <g transform='translate(7.5,37)'>
+      <g id="concreteFill">
+	     <path d='M -0.2,-0.2 L -1.9,-8.5 L 15.6,-22.2 L 41.1,-16.4 
+		          L 39.9,-8.5  L 29,10.5 z' stroke="none" fill="#FFFACD" fill-opacity="1" />
+	  </g>
+	  <g stroke='gray' stroke-width='0.3' fill='none'>
+	     <path d='M 15.6,-22.2 L 15.9,-14.5
+		          M 0,0  L 15.9,-14.5
+				  M 39.9,-8.5  L 15.9,-14.5' />
+	  </g>
+	  
+      <g id="rebar" stroke='maroon' stroke-width='1.5' stroke-linecap="round" >
+          <!-- x-dir -->
+		  <path d="M 4.5,-8      l 0.5,3.5   l 23.7, 8    l 0.2,-3.9  " fill="none"/>
+		  <path d="M 8.5,-11.5   l 0.6,3.65   l 22.5, 6.8    l 0.25,-3.6  " fill="none"/>
+		  <path d="M 12.2,-14.5   l 0.28,3.3   l 21.6, 6.1    l 0.25,-3.6  " fill="none"/>
+		  <path d="M 15.4,-17.4   l 0.28,3.3   l 20.8, 5.5    l 0.25,-3.4  " fill="none"/>
+          <!-- y-dir -->
+		  <path d="M 5.15,-5.5 l 0.5,3.4   l 12.7,-12   l -0.17,-3.7" fill="none"/>
+		  <path d="M 11.3,-3.6 l 0.6,3.6   l 11.75,-12.9    l -0.15,-3.5" fill="none"/>
+		  <path d="M 18.0,-1.5 l 0.3,3.6   l 10.8,-13.7    l 0.1,-3.3" fill="none"/>
+		  <path d="M 25.1,0.9 l 0.05,3.6   l 9.6,-14.6    l 0.35,-3.4" fill="none"/>
+      </g>
+	  
+	  
+      <g stroke='blue' stroke-width='1' fill='none'>
+		<path d='M 0,0 L -1.9,-8.5 L 15.6,-22.2
+			   L 41.1,-16.4  L 29.6	1.6
+			   L -1.9,-8.5 '     />
+		<path d='M -0.2,-0.2 L 29,10.5 L 39.9,-8.5 L 41.1,-16.4 '  />
+		<path d='M 29,10.5 L 29.6	1.6' />
+	  </g>
+
+  </g>
+
+</svg>

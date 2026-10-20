@@ -1,0 +1,25 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  <defs>
+    <filter id="f2" x="0" y="0" width="140%" height="130%">
+        <feOffset result="offOut" in="SourceGraphic" dx="1" dy="1" />
+        <feGaussianBlur result="blurOut" in="offOut" stdDeviation="2" />
+        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+    </filter>
+  </defs>
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+  <g stroke='red' stroke-width='2'>
+      <g stroke='#808080'>
+          <path id="rebar"  d='M 10 10 v 15 Q 10 40,25 40 h 5 Q 45 40,45 25 v -15'  stroke-width='7' fill='none'
+		  filter="url(#f2)"/>
+	  </g>
+	  
+      <path d='M 10 10 v 30 h 35 v -30' fill='none' stroke-dasharray="5 3" stroke='red'/>
+	  <circle cx='10' cy='10' r='3' fill='red' stroke='none'/>
+	  <circle cx='45' cy='10' r='3' fill='red' stroke='none'/>
+	  <circle cx='10' cy='40' r='3' fill='red' stroke='none'/>
+	  <circle cx='45' cy='40' r='3' fill='red' stroke='none'/>
+  </g>
+</svg>

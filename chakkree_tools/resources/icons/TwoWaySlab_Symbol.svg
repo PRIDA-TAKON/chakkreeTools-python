@@ -1,0 +1,21 @@
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="100" height="100" fill="none"/>
+   
+   <g stroke='blue' stroke-width='1.5'  transform='translate(28,26)'>
+       <line x1='-20' y1='-20' x2='20' y2='20' stroke='grey' stroke-width='0.75' />
+       <line x1='20' y1='-20' x2='-20' y2='20' stroke='grey' stroke-width='0.75' />
+       <circle cx='0' cy='0' r='7' fill='white'/>
+	   
+	   <g stroke='black' stroke-width='1' fill='none' transform='translate(-2.5,3.75) scale(1.2,-1.2)'>
+		   <path d="M 0.000,0.945 L 0.485,0.487 L 1.068,0.165 L 1.714,-0.001 L 2.381,-0.001 L 3.027,0.165 L 3.610,0.487 L 4.095,0.945 L 4.195,1.460 L 4.116,1.979 L 3.867,2.441 L 3.478,2.792 L 2.993,2.993"/>
+		   <path d="M 0.787,3.780 L 1.865,3.317 L 2.993,2.993"/>
+		   <path d= "M 0.000,4.882 L 0.139,4.436 L 0.410,4.056 L 0.787,3.780"/>
+		   <path d= "M 0.315,5.670 L 0.119,5.450 L 0.009,5.177 L 0.000,4.882"/>
+		   <path d= "M 4.252,5.355 L 3.702,5.823 L 3.053,6.140 L 2.346,6.287 L 1.624,6.255 L 0.932,6.044 L 0.315,5.670" />
+	   </g>
+   </g>
+</svg>

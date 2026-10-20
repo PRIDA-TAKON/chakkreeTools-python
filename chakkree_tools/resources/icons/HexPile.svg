@@ -1,0 +1,12 @@
+
+<svg  xmlns="http://www.w3.org/2000/svg"
+  width="55" height="55" viewBox="0 0 55 55">
+  <!-- สงวนลิขสิทธิ์ ©2021 จักรี ติยะวงศ์สุวรรณ  -->
+  
+  
+   <rect x="0" y="0"  width="55" height="55" fill="none"/>
+   <g transform="translate(27.5,27.5)">
+       <path d="M -8.66 15 h 17.32 L 17.32 0 L 8.66 -15 h -17.32 L -17.32 0 z M 7 0 Q 7 -7 0 -7 Q -7 -7 -7 0 Q -7 7 0 7 Q 7 7 7 0 z" stroke='black' stroke-width='1' fill='#DCDCDC' fill-rule='evenodd'/>
+   </g>
+   
+</svg>
