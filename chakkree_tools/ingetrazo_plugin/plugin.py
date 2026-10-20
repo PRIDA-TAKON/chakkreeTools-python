@@ -298,10 +298,17 @@ class ChakkreeToolsPlugin(Tool):
         return scene, viewport
 
     def _commit_faces_to_scene(self, scene: Any, viewport: Any, faces: List[List[Any]], status_msg: str) -> None:
-        from PySide6.QtGui import QVector3D
+        try:
+            from PySide6.QtGui import QVector3D
+        except ImportError:
+            QVector3D = None
+
         mesh = scene.mesh
         for loop in faces:
-            q_pts = [QVector3D(p[0], p[1], p[2]) for p in loop]
+            if QVector3D is not None:
+                q_pts = [QVector3D(p[0], p[1], p[2]) for p in loop]
+            else:
+                q_pts = loop
             try:
                 mesh.add_face(q_pts)
             except Exception:
@@ -404,19 +411,8 @@ class ChakkreeToolsPlugin(Tool):
             return
         try:
             import math
-            from PySide6.QtGui import QVector3D
 
-            scene = None
-            viewport = None
-            if hasattr(self.app, "scene") and callable(self.app.scene):
-                scene = self.app.scene()
-            elif hasattr(self.app, "_window") and hasattr(self.app._window, "viewport"):
-                viewport = self.app._window.viewport
-                scene = getattr(viewport, "scene", None)
-            elif hasattr(self.app, "viewport"):
-                viewport = self.app.viewport
-                scene = getattr(viewport, "scene", None)
-
+            scene, viewport = self._get_scene_and_viewport()
             if scene is None or not hasattr(scene, "mesh"):
                 return
 
@@ -456,13 +452,7 @@ class ChakkreeToolsPlugin(Tool):
                 [b3, b0, t0, t3],  # start cap
             ]
 
-            mesh = scene.mesh
-            for loop in faces:
-                q_pts = [QVector3D(p[0], p[1], p[2]) for p in loop]
-                try:
-                    mesh.add_face(q_pts)
-                except Exception:
-                    pass
+            self._commit_faces_to_scene(scene, viewport, faces, f"Created RC Beam {getattr(beam, 'id', 'B1')} ({width}x{depth}m, L={L:.2f}m)")
 
             if hasattr(scene, "bump_view"):
                 scene.bump_view()
