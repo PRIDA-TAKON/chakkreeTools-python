@@ -32,9 +32,26 @@ class ChakkreeToolsPlugin(Tool):
     """
 
     def __init__(self, app: Optional[Any] = None) -> None:
-        super().__init__(name="chakkree_tools")
+        try:
+            super().__init__(name="chakkree_tools")
+        except TypeError:
+            super().__init__()
+            self.name = "chakkree_tools"
         self.app = app
+        self.active = False
         self.active_elements: List[Any] = []
+
+    def on_activate(self, viewport: Optional[Any] = None) -> None:
+        self.active = True
+
+    def on_deactivate(self, viewport: Optional[Any] = None) -> None:
+        self.active = False
+
+    def activate(self) -> None:
+        self.active = True
+
+    def deactivate(self) -> None:
+        self.active = False
 
     def get_menu_registration(self) -> Dict[str, Any]:
         """
@@ -272,6 +289,94 @@ class ChakkreeToolsPlugin(Tool):
                 self.app.flash_status(f"Stream error: {e}")
             return False
 
+    def _render_beam_to_scene(self, beam: Any) -> None:
+        """Renders 3D beam mesh faces into IngeTrazo active scene."""
+        if not self.app:
+            return
+        try:
+            import math
+            from PySide6.QtGui import QVector3D
+
+            scene = None
+            viewport = None
+            if hasattr(self.app, "scene") and callable(self.app.scene):
+                scene = self.app.scene()
+            elif hasattr(self.app, "_window") and hasattr(self.app._window, "viewport"):
+                viewport = self.app._window.viewport
+                scene = getattr(viewport, "scene", None)
+            elif hasattr(self.app, "viewport"):
+                viewport = self.app.viewport
+                scene = getattr(viewport, "scene", None)
+
+            if scene is None or not hasattr(scene, "mesh"):
+                return
+
+            width = float(getattr(beam, "width", 0.20))
+            depth = float(getattr(beam, "depth", 0.40))
+            start = getattr(beam, "start_point", (0.0, 0.0))
+            end = getattr(beam, "end_point", (4.0, 0.0))
+            elevation = float(getattr(beam, "elevation", 3.20))
+
+            dx = end[0] - start[0]
+            dy = end[1] - start[1]
+            L = math.hypot(dx, dy)
+            if L < 1e-6:
+                return
+
+            nx = -dy / L * (width / 2.0)
+            ny = dx / L * (width / 2.0)
+            z_top = elevation
+            z_bot = elevation - depth
+
+            b0 = (start[0] + nx, start[1] + ny, z_bot)
+            b1 = (end[0] + nx, end[1] + ny, z_bot)
+            b2 = (end[0] - nx, end[1] - ny, z_bot)
+            b3 = (start[0] - nx, start[1] - ny, z_bot)
+
+            t0 = (start[0] + nx, start[1] + ny, z_top)
+            t1 = (end[0] + nx, end[1] + ny, z_top)
+            t2 = (end[0] - nx, end[1] - ny, z_top)
+            t3 = (start[0] - nx, start[1] - ny, z_top)
+
+            faces = [
+                [b0, b3, b2, b1],  # bottom
+                [t0, t1, t2, t3],  # top
+                [b0, b1, t1, t0],  # side 1
+                [b1, b2, t2, t1],  # end cap
+                [b2, b3, t3, t2],  # side 2
+                [b3, b0, t0, t3],  # start cap
+            ]
+
+            mesh = scene.mesh
+            for loop in faces:
+                q_pts = [QVector3D(p[0], p[1], p[2]) for p in loop]
+                try:
+                    mesh.add_face(q_pts)
+                except Exception:
+                    pass
+
+            if hasattr(scene, "bump_view"):
+                scene.bump_view()
+            elif hasattr(scene, "version"):
+                scene.version += 1
+
+            if viewport is not None and hasattr(viewport, "update"):
+                viewport.update()
+            elif hasattr(self.app, "viewport") and hasattr(self.app.viewport, "update"):
+                self.app.viewport.update()
+
+            msg = f"Chakkree Tools: Created RC Beam {getattr(beam, 'id', 'B1')} ({width}x{depth}m, L={L:.2f}m)"
+            if hasattr(self.app, "flash_status"):
+                self.app.flash_status(msg)
+            elif viewport is not None and hasattr(viewport, "flash_status"):
+                viewport.flash_status(msg)
+        except Exception as e:
+            print(f"[chakkree_tools] Notice rendering beam: {e}")
+
+    def cmd_create_sample_beam(self) -> Any:
+        """Quickly creates a 4.0m RC beam (0.2x0.4m) and renders it into the 3D scene."""
+        return self.cmd_create_beam(width=0.20, depth=0.40, length=4.0, show_dialog=False)
+
     def cmd_create_pile_cap(
         self, pile_count: int = 1, show_dialog: bool = True, parent: Optional[Any] = None
     ) -> Any:
@@ -358,6 +463,7 @@ class ChakkreeToolsPlugin(Tool):
                     if dlg.exec() == QDialog.Accepted:
                         b = dlg.get_beam()
                         self.active_elements.append(b)
+                        self._render_beam_to_scene(b)
                         return b
                     return None
             except ImportError:
@@ -372,6 +478,7 @@ class ChakkreeToolsPlugin(Tool):
             end_point=(length, 0.0),
         )
         self.active_elements.append(b)
+        self._render_beam_to_scene(b)
         return b
 
     def cmd_create_slab(self, boundary: Optional[List[Any]] = None) -> Any:
@@ -436,6 +543,7 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
         menu.addAction("Create Pile Cap (1-9 Piles)...", lambda: plugin.cmd_create_pile_cap())
         menu.addAction("Create RC Column (4-16 Bars)...", lambda: plugin.cmd_create_column())
         menu.addAction("Create RC Beam...", lambda: plugin.cmd_create_beam())
+        menu.addAction("Quick Create Sample Beam (4m)...", lambda: plugin.cmd_create_sample_beam())
         menu.addAction("Create Slab (PS Plank / RC)...", lambda: plugin.cmd_create_slab())
         menu.addSeparator()
         menu.addAction("Rebar Tools & Details...", lambda: plugin.cmd_rebar_tools())
