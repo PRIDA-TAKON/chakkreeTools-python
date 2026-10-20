@@ -165,35 +165,31 @@ class ChakkreeToolsPlugin(Tool):
     def cmd_rebar_tools(self, parent: Optional[Any] = None) -> None:
         """Handler for Rebar Tools & Standards."""
         try:
-            from PySide6.QtWidgets import QApplication, QMessageBox
+            from PySide6.QtWidgets import QApplication
+            from chakkree_tools.ingetrazo_plugin.ui.rebar_tools_dialog import RebarToolsDialog
             if QApplication.instance() is not None:
                 win = parent or getattr(self.app, "window", getattr(self.app, "_window", None))
                 if callable(win):
                     win = win()
-                msg = (
-                    "Chakkree Rebar Standards (ว.ส.ท. / EIT):\n\n"
-                    "• Standard Hook: 90° hook = 12 x db, 180° hook = 4 x db (min 6.5 cm)\n"
-                    "• Stirrup Hook: 135° seismic hook = 6 x db (min 7.5 cm)\n"
-                    "• Lap Splice Length: Tension = 40 x db, Compression = 30 x db\n"
-                    "• Minimum Concrete Cover: Footing 7.5cm, Column 4.0cm, Beam 4.0cm, Slab 2.5cm"
-                )
-                QMessageBox.information(win, "Rebar Standard Details", msg)
+                dlg = RebarToolsDialog(parent=win)
+                dlg.exec()
         except ImportError:
             pass
 
     def cmd_create_grids(self, parent: Optional[Any] = None) -> None:
         """Handler for GridLine creation."""
         try:
-            from PySide6.QtWidgets import QApplication, QMessageBox
+            from PySide6.QtWidgets import QApplication, QDialog
+            from chakkree_tools.ingetrazo_plugin.ui.grid_dialog import GridLineDialog
             if QApplication.instance() is not None:
                 win = parent or getattr(self.app, "window", getattr(self.app, "_window", None))
                 if callable(win):
                     win = win()
-                QMessageBox.information(
-                    win,
-                    "Grid Lines",
-                    "Grid Lines (GridLine v2026)\n\nGenerates structural axes X/Y with datum level markers.",
-                )
+                dlg = GridLineDialog(parent=win)
+                if dlg.exec() == QDialog.Accepted:
+                    specs = dlg.get_grid_specs()
+                    if hasattr(self.app, "flash_status"):
+                        self.app.flash_status(f"Created Grid Lines: {specs['x_count']}x{specs['y_count']} axes")
         except ImportError:
             pass
 
@@ -230,23 +226,16 @@ class ChakkreeToolsPlugin(Tool):
     def cmd_config_colors(self, parent: Optional[Any] = None) -> None:
         """Handler for Rebar Colors Configuration."""
         try:
-            from PySide6.QtWidgets import QApplication, QMessageBox
+            from PySide6.QtWidgets import QApplication, QDialog
+            from chakkree_tools.ingetrazo_plugin.ui.color_dialog import ColorConfigDialog
             if QApplication.instance() is not None:
                 win = parent or getattr(self.app, "window", getattr(self.app, "_window", None))
                 if callable(win):
                     win = win()
-                msg = (
-                    "Rebar Standard Diameter Color Mapping:\n\n"
-                    "• RB6 (6mm)  : #B0C4DE (Light Steel Blue)\n"
-                    "• RB9 (9mm)  : #4682B4 (Steel Blue)\n"
-                    "• DB12 (12mm): #2E8B57 (Sea Green)\n"
-                    "• DB16 (16mm): #FF8C00 (Dark Orange)\n"
-                    "• DB20 (20mm): #DC143C (Crimson)\n"
-                    "• DB25 (25mm): #8B0000 (Dark Red)\n"
-                    "• DB28 (28mm): #4B0082 (Indigo)\n"
-                    "• DB32 (32mm): #2F4F4F (Dark Slate Gray)"
-                )
-                QMessageBox.information(win, "Rebar Color Standards", msg)
+                dlg = ColorConfigDialog(parent=win)
+                if dlg.exec() == QDialog.Accepted:
+                    if hasattr(self.app, "flash_status"):
+                        self.app.flash_status("Updated rebar color configuration")
         except ImportError:
             pass
 
@@ -598,7 +587,27 @@ class ChakkreeToolsPlugin(Tool):
         self._render_beam_to_scene(b)
         return b
 
-    def cmd_create_slab(self, boundary: Optional[List[Any]] = None) -> Any:
+    def cmd_create_slab(
+        self,
+        boundary: Optional[List[Any]] = None,
+        show_dialog: bool = True,
+        parent: Optional[Any] = None,
+    ) -> Any:
+        if show_dialog:
+            try:
+                from PySide6.QtWidgets import QApplication, QDialog
+                from chakkree_tools.ingetrazo_plugin.ui.slab_dialog import SlabDialog
+
+                if QApplication.instance() is not None:
+                    dlg = SlabDialog(parent=parent)
+                    if dlg.exec() == QDialog.Accepted:
+                        s = dlg.get_slab()
+                        self.active_elements.append(s)
+                        return s
+                    return None
+            except ImportError:
+                pass
+
         from chakkree_tools.rc.slab import Slab
         s = Slab(
             id=f"SLAB_{len(self.active_elements) + 1}",
@@ -622,16 +631,16 @@ class ChakkreeToolsPlugin(Tool):
                     chosen_path, _ = QFileDialog.getSaveFileName(
                         win,
                         "Export Model to .debim",
-                        "chakkree_model.debim.yaml",
-                        "debim Manifest (*.debim.yaml *.yaml *.debim);;All Files (*.*)",
+                        "chakkree_model.debim",
+                        "debim Model (*.debim);;debim Manifest (*.debim.yaml);;All Files (*.*)",
                     )
                     if not chosen_path:
                         return None
                     output_path = chosen_path
                 else:
-                    output_path = "chakkree_model.debim.yaml"
+                    output_path = "chakkree_model.debim"
             except ImportError:
-                output_path = "chakkree_model.debim.yaml"
+                output_path = "chakkree_model.debim"
 
         from chakkree_tools.exporter.debim_exporter import export_to_debim
         res = export_to_debim(
@@ -660,7 +669,6 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
         menu.addAction("Create Pile Cap (1-9 Piles)...", lambda: plugin.cmd_create_pile_cap())
         menu.addAction("Create RC Column (4-16 Bars)...", lambda: plugin.cmd_create_column())
         menu.addAction("Create RC Beam...", lambda: plugin.cmd_create_beam())
-        menu.addAction("Quick Create Sample Beam (4m)...", lambda: plugin.cmd_create_sample_beam())
         menu.addAction("Create Slab (PS Plank / RC)...", lambda: plugin.cmd_create_slab())
         menu.addSeparator()
         menu.addAction("Rebar Tools & Details...", lambda: plugin.cmd_rebar_tools())
