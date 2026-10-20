@@ -711,7 +711,11 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
     Official setup(app) entry point called by IngeTrazo extension loader.
     Registers menus, actions, and the native PySide6 toolbar in IngeTrazo.
     """
-    plugin = ChakkreeToolsPlugin(app=app)
+    try:
+        plugin = ChakkreeToolsPlugin(app=app)
+    except Exception as e:
+        print(f"[chakkree_tools] Error initializing plugin: {e}")
+        plugin = ChakkreeToolsPlugin(app=None)
 
     # 1. Register Menus under Extensions -> Chakkree Tools
     menu = None
