@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 import os
 import pytest
+import importlib.util
 
-APPDATA = os.environ.get("APPDATA")
-APPDATA_PLUGINS = Path(APPDATA) / "ingetrazo" / "plugins" if APPDATA else None
+APPDATA_PLUGINS = Path(os.environ["APPDATA"]) / "ingetrazo" / "plugins"
 
 class MockMenu:
     def __init__(self, name: str):
@@ -48,10 +48,11 @@ def test_installed_ingetrazo_plugin_structure_and_loading():
     metadata_file = plugin_dir / "metadata.json"
     assert metadata_file.exists(), "metadata.json must be present in plugin directory"
 
-    if str(APPDATA_PLUGINS) not in sys.path:
-        sys.path.insert(0, str(APPDATA_PLUGINS))
+    spec = importlib.util.spec_from_file_location("chakkree_installed_plugin", str(plugin_file))
+    assert spec and spec.loader
+    installed_plugin = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(installed_plugin)
 
-    import chakkree_tools.plugin as installed_plugin
     assert hasattr(installed_plugin, "setup"), "Installed plugin must implement setup(app)"
 
     app = MockApp()
@@ -61,10 +62,7 @@ def test_installed_ingetrazo_plugin_structure_and_loading():
     assert app.menus[0].name == "Chakkree Tools"
 
     actions = app.menus[0].actions
-    # Verify menu item 4 is removed
     assert "Quick Create Sample Beam (4m)..." not in actions
-
-    # Verify other required menu actions are present
     assert "Create Pile Cap (1-9 Piles)..." in actions
     assert "Create RC Column (4-16 Bars)..." in actions
     assert "Create RC Beam..." in actions
