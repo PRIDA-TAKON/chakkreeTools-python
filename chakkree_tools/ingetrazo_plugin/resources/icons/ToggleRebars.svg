@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="55" height="55" viewBox="0 0 55 55">
+  <rect x="0" y="0" width="55" height="55" fill="none" stroke="none"/>
+  <g transform="translate(4,8)">
+    <!-- Eye icon with rebar grid -->
+    <path d="M 5,20 Q 23,5 41,20 Q 23,35 5,20 Z" fill="none" stroke="#2E8B57" stroke-width="2.5"/>
+    <circle cx="23" cy="20" r="6" fill="#FF8C00"/>
+    <line x1="8" y1="20" x2="38" y2="20" stroke="#4682B4" stroke-width="1.5" stroke-dasharray="2,2"/>
+    <line x1="23" y1="8" x2="23" y2="32" stroke="#4682B4" stroke-width="1.5" stroke-dasharray="2,2"/>
+  </g>
+</svg>
