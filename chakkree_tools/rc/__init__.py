@@ -19,6 +19,7 @@ from .rebar_mesh import (
     generate_column_rebar_cage,
     generate_beam_rebar_cage,
     generate_footing_rebar_cage,
+    generate_slab_rebar_cage,
     generate_rebar_cage,
 )
 
@@ -40,5 +41,6 @@ __all__ = [
     "generate_column_rebar_cage",
     "generate_beam_rebar_cage",
     "generate_footing_rebar_cage",
+    "generate_slab_rebar_cage",
     "generate_rebar_cage",
 ]

@@ -1,0 +1,29 @@
+id = "chakkree_tools"
+version = "0.1.0"
+author = "Chakkree Tiyawongsuwan & PRIDA-TAKON"
+author_url = "https://github.com/PRIDA-TAKON"
+
+license = "MIT"
+
+repository = "https://github.com/PRIDA-TAKON/chakkreeTools-python"
+download = "https://github.com/PRIDA-TAKON/chakkreeTools-python/releases/download/v0.1.0/chakkree_tools-v0.1.0.zip"
+sha256 = "46c7655434a883a2ab4a7a877589eccc370d73da6ee330d9faeab37820057eb1"
+
+ingetrazo = "0.5.7"
+
+tags = ["structures", "bim", "architecture", "productivity"]
+
+[name]
+es = "Chakkree Tools (Hormigón Armado y Armaduras)"
+en = "Chakkree Tools (RC & Rebar Generator)"
+pt = "Chakkree Tools (Concreto Armado e Armaduras)"
+
+[summary]
+es = "Herramientas paramétricas de hormigón armado para zapatas, columnas, vigas, losas y mallas de armadura 3D con integración .debim."
+en = "Parametric reinforced concrete tools for footings, columns, beams, slabs and 3D rebar cages with .debim OpenBIM integration."
+pt = "Ferramentas paramétricas de concreto armado para sapatas, pilares, vigas, lajes e armaduras 3D com integração .debim."
+
+[description]
+es = "Herramientas paramétricas de hormigón armado en IngeTrazo: zapatas con pilotes (1-9 pilotes), columnas (4-16 barras), vigas, losas (vigueta/placa pretensada y losa maciza), mallas de armadura 3D, medición de cantidades (QTO) y exportación a .debim."
+en = "Parametric reinforced concrete tools in IngeTrazo: pile caps (1-9 piles), columns (4-16 bars), beams, slabs (precast plank and cast-in-place RC), 3D rebar cages, QTO take-off and export to .debim Building-as-Code."
+pt = "Ferramentas paramétricas de concreto armado no IngeTrazo: blocos de coroamento (1-9 estacas), pilares (4-16 barras), vigas, lajes (pré-moldada e maciça), armaduras 3D, quantitativos (QTO) e exportação para .debim."

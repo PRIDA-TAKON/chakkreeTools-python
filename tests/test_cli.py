@@ -263,8 +263,8 @@ def test_ingetrazo_plugin_3d_generation_and_debim_export(tmp_path):
     s3 = plugin.cmd_create_slab(boundary=[(0.0, 0.0), (1.5, 0.0), (1.5, 4.0), (0.0, 4.0)])
 
     assert len(plugin.active_elements) == 12
-    # Verify 3D mesh faces were added to the scene (6 faces per footing, column, beam)
-    assert len(app._scene.mesh.faces) == 54
+    # Verify 3D mesh faces were added to the scene (6 faces per footing, column, beam, slab)
+    assert len(app._scene.mesh.faces) == 72
 
     # QTO Summary
     summary = plugin.cmd_qto_takeoff()

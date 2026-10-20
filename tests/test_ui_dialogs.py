@@ -314,6 +314,14 @@ def test_plugin_cmd_creators(qapp):
     assert b.length == 5.0
     assert len(plugin.active_elements) == 3
 
+    s = plugin.cmd_create_slab(boundary=[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)], show_dialog=False)
+    assert s.area == 16.0
+    assert len(plugin.active_elements) == 4
+
+    s_sample = plugin.cmd_create_sample_slab()
+    assert s_sample.area == 16.0
+    assert len(plugin.active_elements) == 5
+
 
 def test_plugin_setup(qapp):
     from chakkree_tools.ingetrazo_plugin.plugin import setup

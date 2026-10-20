@@ -449,7 +449,9 @@ def generate_column_rebar_cage(column: Any) -> List[Dict[str, Any]]:
                 main_coords.append((x_c + half_w, y_c - half_d + 2 * half_d * frac))
 
     # Generate main bars (Shape 99 or Shape 00)
-    dowel_len = 0.30
+    dowel_len = float(getattr(column, "ext_bottom", 40.0 * main_dia))
+    if dowel_len <= 0.0:
+        dowel_len = 40.0 * main_dia
     for idx, (bx, by) in enumerate(main_coords):
         # Dowel direction points outward/inward
         d_dir = (1.0 if bx >= x_c else -1.0, 1.0 if by >= y_c else -1.0, 0.0)
@@ -571,6 +573,7 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
 
     # Top main bars
     top_w = width - 2.0 * covering - 2.0 * stirrup_dia - top_dia
+    hook_top = max(0.15, 12.0 * top_dia)
     for i in range(top_cnt):
         offset_w = -top_w / 2.0 + (top_w * i / (top_cnt - 1) if top_cnt > 1 else 0.0)
         p_start = (
@@ -580,8 +583,8 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
         )
         polyline = generate_shape_21(
             length=L,
-            hook_start=0.20,
-            hook_end=0.20,
+            hook_start=hook_top,
+            hook_end=hook_top,
             diameter=top_dia,
             origin=p_start,
             direction=(dir_x, dir_y, 0.0),
@@ -600,6 +603,7 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
 
     # Bottom main bars
     bot_w = width - 2.0 * covering - 2.0 * stirrup_dia - bot_dia
+    hook_bot = max(0.15, 12.0 * bot_dia)
     for i in range(bot_cnt):
         offset_w = -bot_w / 2.0 + (bot_w * i / (bot_cnt - 1) if bot_cnt > 1 else 0.0)
         p_start = (
@@ -609,8 +613,8 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
         )
         polyline = generate_shape_21(
             length=L,
-            hook_start=0.20,
-            hook_end=0.20,
+            hook_start=hook_bot,
+            hook_end=hook_bot,
             diameter=bot_dia,
             origin=p_start,
             direction=(dir_x, dir_y, 0.0),
@@ -663,6 +667,9 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
     stirrup_d = depth - 2.0 * covering
     st_z = elevation - depth + covering
 
+    sp_end = getattr(beam, "stirrup_spacing_end", None)
+    sp_mid = getattr(beam, "stirrup_spacing_mid", None)
+
     dist = covering
     while dist <= L - covering:
         # Stirrup center point in XY
@@ -671,7 +678,7 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
 
         # Stirrup 3D vertices (rectangular stirrup perpendicular to beam)
         half_sw = stirrup_w / 2.0
-        hk_len = 0.075
+        hk_len = max(0.065, 6.0 * stirrup_dia)
 
         # Corners in beam local CS (along normal and vertical)
         c0 = (st_x - norm_x * half_sw, st_y - norm_y * half_sw, st_z + stirrup_d)
@@ -688,14 +695,20 @@ def generate_beam_rebar_cage(beam: Any) -> List[Dict[str, Any]]:
         mesh = generate_tubular_mesh(polyline, diameter=stirrup_dia, radial_segments=6)
         rebar_cages.append({
             "type": "stirrup",
-            "size": f"RB{int(stirrup_dia*1000)}",
+            "size": f"RB{int(stirrup_dia*1000)}" if stirrup_dia < 0.012 else f"DB{int(stirrup_dia*1000)}",
             "diameter": stirrup_dia,
             "color": get_rebar_color(stirrup_dia),
             "mesh": mesh,
             "faces": mesh["faces"],
             "polyline": [[round(pt[0], 4), round(pt[1], 4), round(pt[2], 4)] for pt in polyline],
         })
-        dist += stirrup_sp
+
+        if sp_end is not None and sp_mid is not None and sp_end > 0 and sp_mid > 0:
+            is_end_zone = (dist < 0.25 * L) or (dist > 0.75 * L)
+            curr_step = sp_end if is_end_zone else sp_mid
+        else:
+            curr_step = stirrup_sp
+        dist += curr_step
 
     return rebar_cages
 
@@ -781,6 +794,109 @@ def generate_footing_rebar_cage(footing: Any) -> List[Dict[str, Any]]:
     return rebar_cages
 
 
+def generate_slab_rebar_cage(slab: Any) -> List[Dict[str, Any]]:
+    """
+    Generates 3D rebar mesh (wire mesh or bottom rebar grid) for a Slab.
+    """
+    boundary = getattr(slab, "boundary", [])
+    if not boundary or len(boundary) < 3:
+        return []
+
+    slab_type = str(getattr(slab, "slab_type", "RC")).upper()
+    thickness = float(getattr(slab, "thickness", 0.10))
+    elevation = float(getattr(slab, "elevation", 0.0))
+    topping = float(getattr(slab, "topping_thickness", 0.05))
+
+    rebar_cages: List[Dict[str, Any]] = []
+
+    xs = [float(p[0]) for p in boundary]
+    ys = [float(p[1]) for p in boundary]
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+
+    if slab_type == "PS":
+        # Wire mesh in topping
+        cov = 0.025
+        z_rebar = elevation - topping / 2.0
+        dia = 0.004
+        spacing = 0.20
+        spec = str(getattr(slab, "wire_mesh", "WM4@0.20")).strip()
+        m = re.search(r"(?:WM|RB|DB)?(\d+)\s*@\s*([\d\.]+)", spec.upper())
+        if m:
+            dia = max(0.003, float(m.group(1)) / 1000.0)
+            spacing = max(0.05, float(m.group(2)))
+        color_key = "RB6"
+        size_label = f"WM{int(round(dia * 1000))}"
+    else:
+        # RC Slab rebar grid
+        cov = 0.025
+        dia = 0.009
+        spacing = 0.15
+        spec = str(getattr(slab, "rebar_spec", "RB9@0.15")).strip()
+        m = re.search(r"(RB|DB)?\s*(\d+)\s*@\s*([\d\.]+)", spec.upper())
+        if m:
+            prefix = m.group(1) or ("DB" if int(m.group(2)) >= 12 else "RB")
+            dia = max(0.006, float(m.group(2)) / 1000.0)
+            spacing = max(0.05, float(m.group(3)))
+            size_label = f"{prefix}{m.group(2)}"
+        else:
+            size_label = "RB9"
+        color_key = size_label
+        z_rebar = elevation - thickness + cov + dia / 2.0
+
+    len_x = (max_x - min_x) - 2.0 * cov
+    len_y = (max_y - min_y) - 2.0 * cov
+    if len_x <= 0 or len_y <= 0:
+        return []
+
+    # X-direction rebars
+    count_y = max(2, int(len_y / spacing) + 1)
+    for i in range(count_y):
+        y_pos = (min_y + cov) + (len_y * i / (count_y - 1) if count_y > 1 else 0.0)
+        p_start = (min_x + cov, y_pos, z_rebar)
+        polyline = generate_shape_00(
+            length=len_x,
+            diameter=dia,
+            origin=p_start,
+            direction=(1.0, 0.0, 0.0),
+        )
+        mesh = generate_tubular_mesh(polyline, diameter=dia, radial_segments=4)
+        rebar_cages.append({
+            "type": "slab_mesh_x",
+            "size": size_label,
+            "diameter": dia,
+            "color": DEFAULT_REBAR_COLORS.get(color_key, "#4682B4"),
+            "mesh": mesh,
+            "faces": mesh["faces"],
+            "polyline": [[round(pt[0], 4), round(pt[1], 4), round(pt[2], 4)] for pt in polyline],
+        })
+
+    # Y-direction rebars
+    count_x = max(2, int(len_x / spacing) + 1)
+    z_rebar_y = z_rebar + dia
+    for i in range(count_x):
+        x_pos = (min_x + cov) + (len_x * i / (count_x - 1) if count_x > 1 else 0.0)
+        p_start = (x_pos, min_y + cov, z_rebar_y)
+        polyline = generate_shape_00(
+            length=len_y,
+            diameter=dia,
+            origin=p_start,
+            direction=(0.0, 1.0, 0.0),
+        )
+        mesh = generate_tubular_mesh(polyline, diameter=dia, radial_segments=4)
+        rebar_cages.append({
+            "type": "slab_mesh_y",
+            "size": size_label,
+            "diameter": dia,
+            "color": DEFAULT_REBAR_COLORS.get(color_key, "#4682B4"),
+            "mesh": mesh,
+            "faces": mesh["faces"],
+            "polyline": [[round(pt[0], 4), round(pt[1], 4), round(pt[2], 4)] for pt in polyline],
+        })
+
+    return rebar_cages
+
+
 def generate_rebar_cage(element: Any) -> List[Dict[str, Any]]:
     """
     Generic dispatcher function to generate rebar cage meshes for any supported RC element.
@@ -792,4 +908,6 @@ def generate_rebar_cage(element: Any) -> List[Dict[str, Any]]:
         return generate_beam_rebar_cage(element)
     elif "footing" in cls_name or "pile" in cls_name:
         return generate_footing_rebar_cage(element)
+    elif "slab" in cls_name:
+        return generate_slab_rebar_cage(element)
     return []

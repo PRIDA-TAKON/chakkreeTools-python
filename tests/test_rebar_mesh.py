@@ -15,6 +15,7 @@ from chakkree_tools.rc import (
     generate_column_rebar_cage,
     generate_beam_rebar_cage,
     generate_footing_rebar_cage,
+    generate_slab_rebar_cage,
     generate_rebar_cage,
     Column,
     Beam,
@@ -200,6 +201,17 @@ def test_generic_generate_rebar_cage_dispatcher():
     cage = generate_rebar_cage(col)
     assert len(cage) > 0
 
+    from chakkree_tools.rc.slab import Slab
+    slab_rc = Slab(id="S1", slab_type="RC", boundary=[(0.0, 0.0), (3.0, 0.0), (3.0, 3.0), (0.0, 3.0)])
+    slab_cage = generate_rebar_cage(slab_rc)
+    assert len(slab_cage) > 0
+    assert slab_cage[0]["type"] == "slab_mesh_x"
+
+    slab_ps = Slab(id="PS1", slab_type="PS", boundary=[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)])
+    ps_cage = generate_rebar_cage(slab_ps)
+    assert len(ps_cage) > 0
+    assert ps_cage[0]["size"] == "WM4"
+
 
 def test_plugin_rebar_show_hide_toggle():
     """Verifies Show/Hide rebar toggle UI state in ChakkreeToolsPlugin."""
@@ -226,3 +238,135 @@ def test_exporter_with_rebar_mesh():
     assert "rebar_mesh" in elem
     assert len(elem["rebar_mesh"]) > 0
     assert elem["rebar_mesh"][0]["color"] == "#FF8C00"
+
+
+def test_dynamic_slab_rebar_pitch_and_size():
+    """Verifies that Slab rebar generation respects custom rebar_spec and wire_mesh instead of hardcoding."""
+    from chakkree_tools.rc.slab import Slab
+
+    # 1. Custom RC slab with DB12@0.20
+    slab_custom = Slab(
+        id="S_CUSTOM",
+        slab_type="RC",
+        boundary=[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)],
+        thickness=0.15,
+        rebar_spec="DB12@0.20",
+    )
+    cage_rc = generate_slab_rebar_cage(slab_custom)
+    assert len(cage_rc) > 0
+    assert cage_rc[0]["size"] == "DB12"
+    assert cage_rc[0]["diameter"] == 0.012
+    assert cage_rc[0]["color"] == "#2E8B57"
+
+    # 2. Custom PS slab with WM6@0.15
+    slab_ps = Slab(
+        id="PS_CUSTOM",
+        slab_type="PS",
+        boundary=[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)],
+        thickness=0.10,
+        topping_thickness=0.05,
+        wire_mesh="WM6@0.15",
+    )
+    cage_ps = generate_slab_rebar_cage(slab_ps)
+    assert len(cage_ps) > 0
+    assert cage_ps[0]["size"] == "WM6"
+    assert cage_ps[0]["diameter"] == 0.006
+
+
+def test_multi_zone_beam_stirrups():
+    """Verifies that Beam rebar generation supports multi-zone stirrup spacing."""
+    beam = Beam(
+        id="B_ZONES",
+        width=0.25,
+        depth=0.50,
+        start_point=(0.0, 0.0),
+        end_point=(6.0, 0.0),
+        stirrup_spacing_end=0.10,
+        stirrup_spacing_mid=0.20,
+    )
+    cage = generate_beam_rebar_cage(beam)
+    stirrups = [item for item in cage if item["type"] == "stirrup"]
+    assert len(stirrups) > 20
+
+    # Verify standard hooks: 12 * db
+    top_bars = [item for item in cage if item["type"] == "top_main_bar"]
+    assert len(top_bars) > 0
+
+
+def test_grid_lines_3d_rendering():
+    """Verifies that cmd_create_grids generates 3D tubular grid line meshes in IngeTrazo scene."""
+    class MockScene:
+        def __init__(self):
+            class MockMesh:
+                def __init__(self):
+                    self.faces = []
+                def add_face(self, pts):
+                    self.faces.append(pts)
+            self.mesh = MockMesh()
+            self.version = 0
+
+    class MockApp:
+        def __init__(self):
+            self._scene = MockScene()
+            self.status_messages = []
+        def scene(self):
+            return self._scene
+        def flash_status(self, msg):
+            self.status_messages.append(msg)
+
+    app = MockApp()
+    plugin = ChakkreeToolsPlugin(app=app)
+
+    specs = {
+        "x_count": 3,
+        "x_spacing": 5.0,
+        "y_count": 3,
+        "y_spacing": 5.0,
+        "height": 3.5,
+    }
+    res = plugin.cmd_create_grids(specs=specs, show_dialog=False)
+    assert res == specs
+    assert len(app._scene.mesh.faces) > 0
+    assert "3x3 axes" in app.status_messages[-1]
+    assert plugin.grids_x == {"1": 0.0, "2": 5.0, "3": 10.0}
+    assert plugin.grids_y == {"A": 0.0, "B": 5.0, "C": 10.0}
+
+
+def test_cmd_toggle_rebars_renders_active_elements_rebars():
+    """Verifies that cmd_toggle_rebars renders rebar for active elements without duplicating concrete."""
+    class MockScene:
+        def __init__(self):
+            class MockMesh:
+                def __init__(self):
+                    self.faces = []
+                def add_face(self, pts):
+                    self.faces.append(pts)
+            self.mesh = MockMesh()
+            self.version = 0
+
+    class MockApp:
+        def __init__(self):
+            self._scene = MockScene()
+            self.status_messages = []
+        def scene(self):
+            return self._scene
+        def flash_status(self, msg):
+            self.status_messages.append(msg)
+
+    app = MockApp()
+    plugin = ChakkreeToolsPlugin(app=app)
+
+    # Initially empty
+    plugin.cmd_toggle_rebars()
+    assert "No active elements" in app.status_messages[-1]
+
+    # Create a column while show_rebars is True
+    col = plugin.cmd_create_column(width=0.4, depth=0.4, height=3.5, show_dialog=False)
+    assert col in plugin.active_elements
+    initial_faces_count = len(app._scene.mesh.faces)
+    assert initial_faces_count > 6  # Concrete (6 faces) + Rebar faces
+
+    # Toggle rebars again
+    plugin.cmd_toggle_rebars()  # Toggles to False
+    assert plugin.show_rebars is False
+

@@ -60,17 +60,18 @@ class ChakkreeToolsPlugin(Tool):
         if hasattr(self.app, "flash_status"):
             self.app.flash_status(msg)
 
-        # Re-render active elements into scene to reflect rebar toggle state
+        # Render rebar cage for active elements to reflect rebar toggle state
         scene, viewport = self._get_scene_and_viewport()
         if scene is not None and hasattr(scene, "mesh"):
-            for el in self.active_elements:
-                cls_name = getattr(el, "class", el.__class__.__name__).lower()
-                if "column" in cls_name:
-                    self._render_column_to_scene(el)
-                elif "beam" in cls_name:
-                    self._render_beam_to_scene(el)
-                elif "footing" in cls_name or "pile" in cls_name:
-                    self._render_footing_to_scene(el)
+            if not self.active_elements:
+                if hasattr(self.app, "flash_status"):
+                    self.app.flash_status("Chakkree Tools: No active elements. Create a Footing, Column, Beam, or Slab first.")
+                return self.show_rebars
+
+            if self.show_rebars:
+                # Render rebar cages for elements without duplicating concrete faces
+                for el in self.active_elements:
+                    self._render_element_rebar_only(el, scene, viewport)
 
         return self.show_rebars
 
@@ -215,22 +216,43 @@ class ChakkreeToolsPlugin(Tool):
         except ImportError:
             pass
 
-    def cmd_create_grids(self, parent: Optional[Any] = None) -> None:
+    def cmd_create_grids(
+        self,
+        specs: Optional[Dict[str, Any]] = None,
+        show_dialog: bool = True,
+        parent: Optional[Any] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Handler for GridLine creation."""
-        try:
-            from PySide6.QtWidgets import QApplication, QDialog
-            from chakkree_tools.ingetrazo_plugin.ui.grid_dialog import GridLineDialog
-            if QApplication.instance() is not None:
-                win = parent or getattr(self.app, "window", getattr(self.app, "_window", None))
-                if callable(win):
-                    win = win()
-                dlg = GridLineDialog(parent=win)
-                if dlg.exec() == QDialog.Accepted:
-                    specs = dlg.get_grid_specs()
-                    if hasattr(self.app, "flash_status"):
-                        self.app.flash_status(f"Created Grid Lines: {specs['x_count']}x{specs['y_count']} axes")
-        except ImportError:
-            pass
+        if specs is not None:
+            self._render_grids_to_scene(specs)
+            return specs
+
+        if show_dialog:
+            try:
+                from PySide6.QtWidgets import QApplication, QDialog
+                from chakkree_tools.ingetrazo_plugin.ui.grid_dialog import GridLineDialog
+                if QApplication.instance() is not None:
+                    win = parent or getattr(self.app, "window", getattr(self.app, "_window", None))
+                    if callable(win):
+                        win = win()
+                    dlg = GridLineDialog(parent=win)
+                    if dlg.exec() == QDialog.Accepted:
+                        specs = dlg.get_grid_specs()
+                        self._render_grids_to_scene(specs)
+                        return specs
+                    return None
+            except ImportError:
+                pass
+
+        default_specs = {
+            "x_count": 4,
+            "x_spacing": 4.0,
+            "y_count": 3,
+            "y_spacing": 4.0,
+            "height": 3.5,
+        }
+        self._render_grids_to_scene(default_specs)
+        return default_specs
 
     def cmd_qto_takeoff(self, parent: Optional[Any] = None) -> Any:
         """Handler for QTO TakeOff."""
@@ -358,6 +380,92 @@ class ChakkreeToolsPlugin(Tool):
         elif viewport is not None and hasattr(viewport, "flash_status"):
             viewport.flash_status(f"Chakkree Tools: {status_msg}")
 
+    def _render_grids_to_scene(self, specs: Dict[str, Any]) -> None:
+        """Renders 3D structural grid lines and bubbles into IngeTrazo active scene."""
+        import math
+        scene, viewport = self._get_scene_and_viewport()
+        if scene is None or not hasattr(scene, "mesh"):
+            return
+
+        x_count = int(specs.get("x_count", 4))
+        x_spacing = float(specs.get("x_spacing", 4.0))
+        y_count = int(specs.get("y_count", 3))
+        y_spacing = float(specs.get("y_spacing", 4.0))
+        height = float(specs.get("height", 3.5))
+
+        total_x = (x_count - 1) * x_spacing if x_count > 1 else 0.0
+        total_y = (y_count - 1) * y_spacing if y_count > 1 else 0.0
+        overhang = 1.50
+        dia = 0.025  # Grid line tube diameter
+
+        faces: List[List[Any]] = []
+        from chakkree_tools.rc.rebar_mesh import generate_tubular_mesh
+
+        # Store grid axes on plugin instance
+        self.grid_specs = specs
+        self.grids_x = {str(i + 1): i * x_spacing for i in range(x_count)}
+        self.grids_y = {chr(65 + j): j * y_spacing for j in range(y_count)}
+
+        # Grid lines along Y (for each X axis)
+        for i in range(x_count):
+            x = i * x_spacing
+            p_start = (x, -overhang, 0.0)
+            p_end = (x, total_y + overhang, 0.0)
+            m = generate_tubular_mesh([p_start, p_end], diameter=dia, radial_segments=4)
+            if "faces" in m:
+                faces.extend(m["faces"])
+
+            # Add octagonal bubble markers at both ends
+            for cy in [-overhang - 0.35, total_y + overhang + 0.35]:
+                bubble_poly = []
+                r = 0.30
+                for k in range(8):
+                    ang = 2.0 * math.pi * k / 8.0
+                    bubble_poly.append((x + r * math.cos(ang), cy + r * math.sin(ang), 0.005))
+                faces.append(bubble_poly)
+
+        # Grid lines along X (for each Y axis)
+        for j in range(y_count):
+            y = j * y_spacing
+            p_start = (-overhang, y, 0.0)
+            p_end = (total_x + overhang, y, 0.0)
+            m = generate_tubular_mesh([p_start, p_end], diameter=dia, radial_segments=4)
+            if "faces" in m:
+                faces.extend(m["faces"])
+
+            # Add octagonal bubble markers at both ends
+            for cx in [-overhang - 0.35, total_x + overhang + 0.35]:
+                bubble_poly = []
+                r = 0.30
+                for k in range(8):
+                    ang = 2.0 * math.pi * k / 8.0
+                    bubble_poly.append((cx + r * math.cos(ang), y + r * math.sin(ang), 0.005))
+                faces.append(bubble_poly)
+
+        if faces:
+            self._commit_faces_to_scene(
+                scene,
+                viewport,
+                faces,
+                f"Created Grid Lines: {x_count}x{y_count} axes ({total_x:.1f}x{total_y:.1f}m)",
+            )
+
+    def _render_element_rebar_only(self, element: Any, scene: Any, viewport: Any) -> None:
+        """Renders ONLY the 3D rebar cage faces of an element without re-adding concrete faces."""
+        try:
+            from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
+            rebar_cage = generate_rebar_cage(element)
+            for item in rebar_cage:
+                if "faces" in item and item["faces"]:
+                    self._commit_faces_to_scene(
+                        scene,
+                        viewport,
+                        item["faces"],
+                        f"Rendered {getattr(element, 'id', 'Element')} Rebars",
+                    )
+        except Exception as e:
+            print(f"[chakkree_tools] Notice rendering element rebars: {e}")
+
     def _render_column_to_scene(self, column: Any) -> None:
         """Renders 3D column concrete mesh & rebar cage faces into IngeTrazo active scene."""
         if not self.app:
@@ -397,11 +505,7 @@ class ChakkreeToolsPlugin(Tool):
 
             # Render 3D Rebar Cage if enabled
             if self.show_rebars:
-                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
-                rebar_cage = generate_rebar_cage(column)
-                for item in rebar_cage:
-                    if "faces" in item:
-                        self._commit_faces_to_scene(scene, viewport, item["faces"], "Rendered Column Rebars")
+                self._render_element_rebar_only(column, scene, viewport)
         except Exception as e:
             print(f"[chakkree_tools] Notice rendering column: {e}")
 
@@ -445,11 +549,7 @@ class ChakkreeToolsPlugin(Tool):
 
             # Render 3D Rebar Cage if enabled
             if self.show_rebars:
-                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
-                rebar_cage = generate_rebar_cage(footing)
-                for item in rebar_cage:
-                    if "faces" in item:
-                        self._commit_faces_to_scene(scene, viewport, item["faces"], "Rendered Footing Rebars")
+                self._render_element_rebar_only(footing, scene, viewport)
         except Exception as e:
             print(f"[chakkree_tools] Notice rendering footing: {e}")
 
@@ -504,11 +604,7 @@ class ChakkreeToolsPlugin(Tool):
 
             # Render 3D Rebar Cage if enabled
             if self.show_rebars:
-                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
-                rebar_cage = generate_rebar_cage(beam)
-                for item in rebar_cage:
-                    if "faces" in item:
-                        self._commit_faces_to_scene(scene, viewport, item["faces"], "Rendered Beam Rebars")
+                self._render_element_rebar_only(beam, scene, viewport)
 
             if hasattr(scene, "bump_view"):
                 scene.bump_view()
@@ -527,6 +623,57 @@ class ChakkreeToolsPlugin(Tool):
                 viewport.flash_status(msg)
         except Exception as e:
             print(f"[chakkree_tools] Notice rendering beam: {e}")
+
+    def _render_slab_to_scene(self, slab: Any) -> None:
+        """Renders 3D slab concrete mesh & rebar cage faces into IngeTrazo active scene."""
+        if not self.app:
+            return
+        try:
+            scene, viewport = self._get_scene_and_viewport()
+            if scene is None or not hasattr(scene, "mesh"):
+                return
+            boundary = getattr(slab, "boundary", [])
+            if not boundary or len(boundary) < 3:
+                return
+
+            thickness = float(getattr(slab, "thickness", 0.10))
+            elevation = float(getattr(slab, "elevation", 0.0))
+            z_top = elevation
+            z_bot = elevation - thickness
+
+            n = len(boundary)
+            top_pts = [(float(p[0]), float(p[1]), z_top) for p in boundary]
+            bot_pts = [(float(p[0]), float(p[1]), z_bot) for p in reversed(boundary)]
+
+            faces = [top_pts, bot_pts]
+
+            # Side faces (vertical perimeter faces)
+            for i in range(n):
+                j = (i + 1) % n
+                p_i = boundary[i]
+                p_j = boundary[j]
+                b0 = (float(p_i[0]), float(p_i[1]), z_bot)
+                b1 = (float(p_j[0]), float(p_j[1]), z_bot)
+                t1 = (float(p_j[0]), float(p_j[1]), z_top)
+                t0 = (float(p_i[0]), float(p_i[1]), z_top)
+                faces.append([b0, b1, t1, t0])
+
+            self._commit_faces_to_scene(
+                scene,
+                viewport,
+                faces,
+                f"Created {getattr(slab, 'slab_type', 'RC')} Slab {getattr(slab, 'id', 'S1')} (T={thickness}m, Area={getattr(slab, 'area', 0.0):.2f} m2)",
+            )
+
+            # Render 3D Rebar Cage if enabled
+            if self.show_rebars:
+                self._render_element_rebar_only(slab, scene, viewport)
+        except Exception as e:
+            print(f"[chakkree_tools] Notice rendering slab: {e}")
+
+    def cmd_create_sample_slab(self) -> Any:
+        """Quickly creates a 4.0x4.0m slab and renders it into the 3D scene."""
+        return self.cmd_create_slab(show_dialog=False)
 
     def cmd_create_sample_beam(self) -> Any:
         """Quickly creates a 4.0m RC beam (0.2x0.4m) and renders it into the 3D scene."""
@@ -652,10 +799,14 @@ class ChakkreeToolsPlugin(Tool):
                 from chakkree_tools.ingetrazo_plugin.ui.slab_dialog import SlabDialog
 
                 if QApplication.instance() is not None:
-                    dlg = SlabDialog(parent=parent)
+                    win = parent or getattr(self.app, "window", getattr(self.app, "_window", None))
+                    if callable(win):
+                        win = win()
+                    dlg = SlabDialog(parent=win or parent)
                     if dlg.exec() == QDialog.Accepted:
                         s = dlg.get_slab()
                         self.active_elements.append(s)
+                        self._render_slab_to_scene(s)
                         return s
                     return None
             except ImportError:
@@ -667,6 +818,7 @@ class ChakkreeToolsPlugin(Tool):
             boundary=boundary or [(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)],
         )
         self.active_elements.append(s)
+        self._render_slab_to_scene(s)
         return s
 
     def cmd_export_debim(
@@ -696,10 +848,15 @@ class ChakkreeToolsPlugin(Tool):
                 output_path = "chakkree_model.debim"
 
         from chakkree_tools.exporter.debim_exporter import export_to_debim
+        grids_x = getattr(self, "grids_x", None)
+        grids_y = getattr(self, "grids_y", None)
         res = export_to_debim(
             elements=self.active_elements,
             output_path=str(output_path),
             project_name="Chakkree Tools IngeTrazo Export",
+            grids_x=grids_x,
+            grids_y=grids_y,
+            include_rebar_mesh=self.show_rebars,
         )
         if hasattr(self.app, "flash_status"):
             self.app.flash_status(f"Exported .debim to {Path(output_path).name}")
