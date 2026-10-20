@@ -17,7 +17,6 @@ except ImportError:
 from chakkree_tools.exporter.debim_exporter import DebimExporter
 
 
-
 class AgentStreamerError(Exception):
     """Exception raised when streaming or probe check to IngeTrazo Agent Bridge fails."""
     pass
@@ -59,7 +58,7 @@ class AgentStreamer:
         try:
             with urllib.request.urlopen(req, timeout=req_timeout) as resp:
                 return resp.status in (200, 204, 404, 405)
-        except urllib.error.HTTPError as e:
+        except urllib.error.HTTPError:
             # Server responded with HTTP status code (e.g. 404/405/400), meaning host/port is alive
             return True
         except (urllib.error.URLError, TimeoutError, OSError):
@@ -82,7 +81,6 @@ class AgentStreamer:
         if isinstance(manifest, dict):
             payload_yaml = _dump_yaml_str(manifest)
         elif isinstance(manifest, str):
-
             payload_yaml = manifest
         else:
             raise ValueError("Manifest must be a dict or YAML string.")
@@ -134,6 +132,7 @@ class AgentStreamer:
         grids_x: Optional[Dict[str, float]] = None,
         grids_y: Optional[Dict[str, float]] = None,
         path: str = "/api/v1/stream",
+        include_rebar_mesh: bool = False,
     ) -> Dict[str, Any]:
         """
         Convenience method to convert a list of RC elements directly to .debim manifest
@@ -145,7 +144,7 @@ class AgentStreamer:
         for elem in elements:
             exporter.add_element(elem)
 
-        manifest_dict = exporter.to_dict()
+        manifest_dict = exporter.to_dict(include_rebar_mesh=include_rebar_mesh)
         return self.stream_manifest(manifest=manifest_dict, path=path)
 
 
@@ -153,12 +152,13 @@ def stream_to_ingetrazo(
     elements_or_manifest: Union[List[Any], Dict[str, Any], str],
     host: str = "127.0.0.1",
     port: int = 8482,
+    include_rebar_mesh: bool = False,
 ) -> Dict[str, Any]:
     """
     Convenience function for live streaming models to IngeTrazo.
     """
     streamer = AgentStreamer(host=host, port=port)
     if isinstance(elements_or_manifest, list):
-        return streamer.stream_elements(elements_or_manifest)
+        return streamer.stream_elements(elements_or_manifest, include_rebar_mesh=include_rebar_mesh)
     else:
         return streamer.stream_manifest(elements_or_manifest)

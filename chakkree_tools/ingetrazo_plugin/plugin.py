@@ -25,7 +25,6 @@ except ImportError:
                 self.active = False
 
 
-
 class ChakkreeToolsPlugin(Tool):
     """
     IngeTrazo plugin providing parametric RC structural tools and .debim export.
@@ -40,6 +39,7 @@ class ChakkreeToolsPlugin(Tool):
         self.app = app
         self.active = False
         self.active_elements: List[Any] = []
+        self.show_rebars: bool = False
 
     def on_activate(self, viewport: Optional[Any] = None) -> None:
         self.active = True
@@ -52,6 +52,27 @@ class ChakkreeToolsPlugin(Tool):
 
     def deactivate(self) -> None:
         self.active = False
+
+    def cmd_toggle_rebars(self, parent: Optional[Any] = None) -> bool:
+        """Toggles visibility of 3D rebar cages inside the IngeTrazo viewport."""
+        self.show_rebars = not self.show_rebars
+        msg = f"Chakkree Tools: Rebar Meshes {'Shown' if self.show_rebars else 'Hidden'}"
+        if hasattr(self.app, "flash_status"):
+            self.app.flash_status(msg)
+
+        # Re-render active elements into scene to reflect rebar toggle state
+        scene, viewport = self._get_scene_and_viewport()
+        if scene is not None and hasattr(scene, "mesh"):
+            for el in self.active_elements:
+                cls_name = getattr(el, "class", el.__class__.__name__).lower()
+                if "column" in cls_name:
+                    self._render_column_to_scene(el)
+                elif "beam" in cls_name:
+                    self._render_beam_to_scene(el)
+                elif "footing" in cls_name or "pile" in cls_name:
+                    self._render_footing_to_scene(el)
+
+        return self.show_rebars
 
     def get_menu_registration(self) -> Dict[str, Any]:
         """
@@ -77,6 +98,10 @@ class ChakkreeToolsPlugin(Tool):
                     "action": self.cmd_create_slab,
                 },
                 {
+                    "label": "Toggle Show/Hide 3D Rebar Meshes",
+                    "action": self.cmd_toggle_rebars,
+                },
+                {
                     "label": "Export Model to .debim...",
                     "action": self.cmd_export_debim,
                     "shortcut": "Ctrl+Shift+E",
@@ -98,6 +123,13 @@ class ChakkreeToolsPlugin(Tool):
                     "tooltip": "เครื่องมือเหล็กเสริม (Rebar Tools) - ดัดขอและสร้างเหล็กเสริม 3D",
                     "icon": str(icons_dir / "RebarTools.svg"),
                     "action": self.cmd_rebar_tools,
+                },
+                {
+                    "name": "ToggleRebars",
+                    "label": "Show/Hide Rebars",
+                    "tooltip": "แสดง/ซ่อนโครงเหล็กเสริม 3D (Toggle Show/Hide Rebar Meshes)",
+                    "icon": str(icons_dir / "ToggleRebars.svg"),
+                    "action": self.cmd_toggle_rebars,
                 },
                 {
                     "name": "FootingTools",
@@ -327,7 +359,7 @@ class ChakkreeToolsPlugin(Tool):
             viewport.flash_status(f"Chakkree Tools: {status_msg}")
 
     def _render_column_to_scene(self, column: Any) -> None:
-        """Renders 3D column mesh faces into IngeTrazo active scene."""
+        """Renders 3D column concrete mesh & rebar cage faces into IngeTrazo active scene."""
         if not self.app:
             return
         try:
@@ -362,11 +394,19 @@ class ChakkreeToolsPlugin(Tool):
                 [b3, b0, t0, t3],
             ]
             self._commit_faces_to_scene(scene, viewport, faces, f"Created RC Column {getattr(column, 'id', 'C1')} ({width}x{depth}m, H={height}m)")
+
+            # Render 3D Rebar Cage if enabled
+            if self.show_rebars:
+                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
+                rebar_cage = generate_rebar_cage(column)
+                for item in rebar_cage:
+                    if "faces" in item:
+                        self._commit_faces_to_scene(scene, viewport, item["faces"], "Rendered Column Rebars")
         except Exception as e:
             print(f"[chakkree_tools] Notice rendering column: {e}")
 
     def _render_footing_to_scene(self, footing: Any) -> None:
-        """Renders 3D footing mesh faces into IngeTrazo active scene."""
+        """Renders 3D footing concrete mesh & rebar cage faces into IngeTrazo active scene."""
         if not self.app:
             return
         try:
@@ -402,11 +442,19 @@ class ChakkreeToolsPlugin(Tool):
                 [b3, b0, t0, t3],
             ]
             self._commit_faces_to_scene(scene, viewport, faces, f"Created Footing {getattr(footing, 'id', 'F1')} ({width}x{length}m, T={thickness}m)")
+
+            # Render 3D Rebar Cage if enabled
+            if self.show_rebars:
+                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
+                rebar_cage = generate_rebar_cage(footing)
+                for item in rebar_cage:
+                    if "faces" in item:
+                        self._commit_faces_to_scene(scene, viewport, item["faces"], "Rendered Footing Rebars")
         except Exception as e:
             print(f"[chakkree_tools] Notice rendering footing: {e}")
 
     def _render_beam_to_scene(self, beam: Any) -> None:
-        """Renders 3D beam mesh faces into IngeTrazo active scene."""
+        """Renders 3D beam concrete mesh & rebar cage faces into IngeTrazo active scene."""
         if not self.app:
             return
         try:
@@ -453,6 +501,14 @@ class ChakkreeToolsPlugin(Tool):
             ]
 
             self._commit_faces_to_scene(scene, viewport, faces, f"Created RC Beam {getattr(beam, 'id', 'B1')} ({width}x{depth}m, L={L:.2f}m)")
+
+            # Render 3D Rebar Cage if enabled
+            if self.show_rebars:
+                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
+                rebar_cage = generate_rebar_cage(beam)
+                for item in rebar_cage:
+                    if "faces" in item:
+                        self._commit_faces_to_scene(scene, viewport, item["faces"], "Rendered Beam Rebars")
 
             if hasattr(scene, "bump_view"):
                 scene.bump_view()
@@ -668,6 +724,7 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
         menu.addAction("Create RC Beam...", lambda: plugin.cmd_create_beam())
         menu.addAction("Create Slab (PS Plank / RC)...", lambda: plugin.cmd_create_slab())
         menu.addSeparator()
+        menu.addAction("Show/Hide 3D Rebar Meshes", lambda: plugin.cmd_toggle_rebars())
         menu.addAction("Rebar Tools & Details...", lambda: plugin.cmd_rebar_tools())
         menu.addAction("Grid Lines...", lambda: plugin.cmd_create_grids())
         menu.addAction("Rebar Color Config...", lambda: plugin.cmd_config_colors())
@@ -684,6 +741,7 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
         app.add_menu_action("Chakkree: RC Columns...", lambda: plugin.cmd_create_column(), tip="Create RC Column")
         app.add_menu_action("Chakkree: RC Beams...", lambda: plugin.cmd_create_beam(), tip="Create RC Beam")
         app.add_menu_action("Chakkree: Slabs...", lambda: plugin.cmd_create_slab(), tip="Create RC Slab")
+        app.add_menu_action("Chakkree: Show/Hide Rebars", lambda: plugin.cmd_toggle_rebars(), tip="Toggle Show/Hide 3D Rebar Meshes")
         app.add_menu_action("Chakkree: QTO Take-off...", lambda: plugin.cmd_qto_takeoff(), tip="Automated BBS & Quantity Take-off")
         app.add_menu_action("Chakkree: Export .debim...", lambda: plugin.cmd_export_debim(), tip="Export to .debim manifest")
         app.add_menu_action("Chakkree: Stream to Bridge (Port 8482)...", lambda: plugin.cmd_stream_to_bridge(), tip="Stream to IngeTrazo port 8482")
@@ -720,6 +778,7 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
 
                 actions_data = [
                     ("RebarTools.svg", "Rebar Tools", "เครื่องมือเหล็กเสริม (Rebar Tools) - ดัดขอและสร้างเหล็กเสริม 3D", plugin.cmd_rebar_tools),
+                    ("ToggleRebars.svg", "Show/Hide Rebars", "แสดง/ซ่อนโครงเหล็กเสริม 3D (Toggle Show/Hide Rebar Meshes)", plugin.cmd_toggle_rebars),
                     ("FootingTools.svg", "Footings", "เครื่องมือฐานราก (Footing Tools) - ฐานรากเสาเข็ม 1-9 ต้น", plugin.cmd_create_pile_cap),
                     ("ColumnTools.svg", "Columns", "เครื่องมือเสา ค.ส.ล. (Column Tools)", plugin.cmd_create_column),
                     ("BeamTools.svg", "Beams", "เครื่องมือคาน ค.ส.ล. (Beam Tools)", plugin.cmd_create_beam),
@@ -753,4 +812,3 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
             print(f"[chakkree_tools] Notice: Could not register toolbar: {e}")
 
     return plugin
-

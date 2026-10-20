@@ -15,8 +15,6 @@ except ImportError:
     from chakkree_tools.exporter.pure_yaml import dump_yaml as _dump_manifest
 
 
-
-
 class DebimExporter:
     """
     Constructs and serializes .debim YAML manifests following schema: "IFC4-Minimal".
@@ -50,8 +48,11 @@ class DebimExporter:
         """Adds a Footing, Column, Beam, or Slab element."""
         self.elements.append(element)
 
-    def to_dict(self) -> Dict[str, Any]:
-        """Builds dictionary payload matching debim specification."""
+    def to_dict(self, include_rebar_mesh: bool = False) -> Dict[str, Any]:
+        """
+        Builds dictionary payload matching debim specification.
+        Includes 3D rebar cage mesh geometry with diameter color mappings when include_rebar_mesh=True.
+        """
         manifest: Dict[str, Any] = {
             "schema": "IFC4-Minimal",
             "project": {
@@ -71,24 +72,33 @@ class DebimExporter:
         serialized_elements: List[Dict[str, Any]] = []
         for elem in self.elements:
             if hasattr(elem, "to_debim_dict"):
-                serialized_elements.append(elem.to_debim_dict(storey_id=self.storeys[0]["id"]))
+                el_dict = elem.to_debim_dict(storey_id=self.storeys[0]["id"])
             elif isinstance(elem, dict):
-                serialized_elements.append(elem)
+                el_dict = dict(elem)
+            else:
+                continue
+
+            if include_rebar_mesh:
+                from chakkree_tools.rc.rebar_mesh import generate_rebar_cage
+                cage = generate_rebar_cage(elem)
+                if cage:
+                    el_dict["rebar_mesh"] = cage
+
+            serialized_elements.append(el_dict)
 
         manifest["elements"] = serialized_elements
         return manifest
 
-    def to_yaml(self) -> str:
+    def to_yaml(self, include_rebar_mesh: bool = False) -> str:
         """Serializes manifest to clean YAML formatted string."""
-        data = self.to_dict()
+        data = self.to_dict(include_rebar_mesh=include_rebar_mesh)
         return _dump_manifest(data)
 
-
-    def save(self, filepath: Union[str, Path]) -> Path:
+    def save(self, filepath: Union[str, Path], include_rebar_mesh: bool = False) -> Path:
         """Saves manifest to a .debim or .debim.yaml file."""
         p = Path(filepath)
         p.parent.mkdir(parents=True, exist_ok=True)
-        content = self.to_yaml()
+        content = self.to_yaml(include_rebar_mesh=include_rebar_mesh)
         p.write_text(content, encoding="utf-8")
         return p
 
@@ -99,6 +109,7 @@ def export_to_debim(
     project_name: str = "Chakkree Tools Export",
     grids_x: Optional[Dict[str, float]] = None,
     grids_y: Optional[Dict[str, float]] = None,
+    include_rebar_mesh: bool = False,
 ) -> Path:
     """Convenience helper to export elements directly into a .debim file."""
     exporter = DebimExporter(project_name=project_name)
@@ -106,4 +117,4 @@ def export_to_debim(
         exporter.set_grids(grids_x, grids_y)
     for elem in elements:
         exporter.add_element(elem)
-    return exporter.save(output_path)
+    return exporter.save(output_path, include_rebar_mesh=include_rebar_mesh)
