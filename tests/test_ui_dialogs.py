@@ -195,5 +195,11 @@ def test_plugin_setup(qapp):
     assert plugin is not None
     assert "Chakkree Tools" in app.menus
     assert "Create Pile Cap (1-9 Piles)..." in app.menus["Chakkree Tools"].items
-    assert len(app.actions) > 0
+    # With submenu present, root actions must NOT be duplicated
+    assert len(app.actions) == 0
 
+    # Test fallback when add_menu is not available
+    app_fallback = MockIngeTrazoApp()
+    app_fallback.add_menu = None
+    setup(app_fallback)
+    assert len(app_fallback.actions) > 0

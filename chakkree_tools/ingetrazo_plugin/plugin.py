@@ -536,7 +536,7 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
 
     # 1. Register Menus under Extensions -> Chakkree Tools
     menu = None
-    if hasattr(app, "add_menu"):
+    if hasattr(app, "add_menu") and callable(getattr(app, "add_menu")):
         menu = app.add_menu("Chakkree Tools")
 
     if menu is not None:
@@ -556,8 +556,8 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
         menu.addSeparator()
         menu.addAction("About Chakkree Tools...", lambda: plugin.cmd_about())
 
-    # Fallback or additional quick-access actions directly in Extensions menu
-    if hasattr(app, "add_menu_action"):
+    # Fallback only when submenu add_menu is not available
+    elif hasattr(app, "add_menu_action"):
         app.add_menu_action("Chakkree: Footings (Pile Cap)...", lambda: plugin.cmd_create_pile_cap(), tip="Create Pile Cap / Footing")
         app.add_menu_action("Chakkree: RC Columns...", lambda: plugin.cmd_create_column(), tip="Create RC Column")
         app.add_menu_action("Chakkree: RC Beams...", lambda: plugin.cmd_create_beam(), tip="Create RC Beam")
