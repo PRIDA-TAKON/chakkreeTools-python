@@ -5,6 +5,7 @@ Unit tests for Bar Bending Schedule (BBS) and Material Take-off (QTO)
 import json
 import pytest
 
+import zipfile
 from chakkree_tools.qto import (
     REBAR_WEIGHTS,
     BarBendingSchedule,
@@ -14,6 +15,7 @@ from chakkree_tools.qto import (
     calculate_excavation_volume,
     calculate_hook_allowance,
     export_bbs_to_csv,
+    export_bbs_to_excel,
     export_bbs_to_json,
     export_bbs_to_markdown,
     export_takeoff_to_csv,
@@ -106,6 +108,11 @@ def test_parse_rebar_spec():
     assert spec2["spacing"] == 0.175
     assert spec2["bar_mark"] == "RB6"
     assert spec2["diameter_m"] == 0.006
+
+    spec3 = parse_rebar_spec("RB6@0.10/0.20")
+    assert spec3["bar_mark"] == "RB6"
+    assert spec3["spacing_end"] == 0.10
+    assert spec3["spacing_mid"] == 0.20
 
 
 def test_bar_bending_schedule_aggregation():
@@ -216,3 +223,41 @@ def test_exports_markdown_csv_json():
     mto_json = export_takeoff_to_json(mto)
     mto_json_data = json.loads(mto_json)
     assert "total_concrete_m3" in mto_json_data
+
+
+def test_two_zone_stirrup_spacing_beam():
+    b_single = Beam(id="B1", width=0.2, depth=0.4, start_point=(0, 0), end_point=(4, 0), stirrup_spec="RB6@0.20")
+    b_two_zone = Beam(id="B2", width=0.2, depth=0.4, start_point=(0, 0), end_point=(4, 0), stirrup_spec="RB6@0.10/0.20")
+
+    bbs_single = BarBendingSchedule.from_elements([b_single])
+    bbs_two_zone = BarBendingSchedule.from_elements([b_two_zone])
+
+    stirrup_item_single = [it for it in bbs_single.items if it.shape_code == "41"][0]
+    stirrup_item_two_zone = [it for it in bbs_two_zone.items if it.shape_code == "41"][0]
+
+    assert stirrup_item_two_zone.bars_per_member > stirrup_item_single.bars_per_member
+    assert "2-Zone" in stirrup_item_two_zone.description
+
+
+def test_excel_and_csv_bar_cut_list_export(tmp_path):
+    f1 = Footing(id="F1", width=1.0, length=1.0, thickness=0.35)
+    b1 = Beam(id="B1", width=0.2, depth=0.4, start_point=(0, 0), end_point=(4, 0), stirrup_spec="RB6@0.10/0.20")
+    bbs = BarBendingSchedule.from_elements([f1, b1])
+
+    # Excel export
+    xlsx_path = tmp_path / "bar_cut_list.xlsx"
+    export_bbs_to_excel(bbs, str(xlsx_path))
+    assert xlsx_path.exists()
+    assert xlsx_path.stat().st_size > 0
+
+    # Validate Excel zip contents
+    with zipfile.ZipFile(xlsx_path, "r") as zf:
+        file_list = zf.namelist()
+        assert "xl/workbook.xml" in file_list
+        assert "xl/worksheets/sheet1.xml" in file_list
+
+    # CSV export check
+    csv_str = export_bbs_to_csv(bbs)
+    assert "Member ID,Member Name,Bar Mark,Shape Code" in csv_str
+    assert "F1" in csv_str
+    assert "B1" in csv_str

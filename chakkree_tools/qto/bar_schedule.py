@@ -6,9 +6,12 @@ Original Spec & Standard: วสท. / EIT / TIS Standards (มอก.)
 Author: Chakkree Tools Port
 """
 
+import io
 import json
 import math
 import re
+import xml.etree.ElementTree as ET
+import zipfile
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -89,18 +92,19 @@ def get_bar_diameter(bar_mark: Union[str, float, int]) -> float:
 
 def calculate_hook_allowance(hook_type: str, diameter_m: float) -> float:
     """
-    Calculates standard hook allowance (in meters) for rebar shapes.
-    - 90 deg hook: 12 * db
+    Calculates standard hook allowance (in meters) for rebar shapes according to
+    ว.ส.ท. (EIT Standard 1007-34).
+    - 90 deg hook: max(12 * db, 0.065m)
     - 135 deg stirrup hook: max(6 * db, 0.075m)
-    - 180 deg standard hook: 16 * db
+    - 180 deg standard hook: max(16 * db, 0.065m)
     """
     ht = str(hook_type).strip().lower()
     if "135" in ht:
         return max(6.0 * diameter_m, 0.075)
     elif "180" in ht:
-        return 16.0 * diameter_m
+        return max(16.0 * diameter_m, 0.065)
     else:  # Default 90 degree
-        return 12.0 * diameter_m
+        return max(12.0 * diameter_m, 0.065)
 
 
 def calculate_cut_length(
@@ -109,10 +113,10 @@ def calculate_cut_length(
     diameter_m: float = 0.012,
 ) -> float:
     """
-    Calculates cut length in meters for standard rebar shape codes:
+    Calculates cut length in meters for standard rebar shape codes per EIT 1007-34:
     - Shape 00: Straight bar
     - Shape 21: U-bent bar (length + hook_start + hook_end)
-    - Shape 41: Rectangular closed stirrup (2*(width+depth) + 2*hook_length)
+    - Shape 41 / 51: Rectangular closed stirrup (2*(width+depth) + 2*hook_length)
     - Shape 99: Column vertical with dowel bend (height + dowel_length)
     """
     code = str(shape_code).strip().zfill(2)
@@ -129,7 +133,7 @@ def calculate_cut_length(
         h_end = dimensions.get("hook_end", calculate_hook_allowance("90", diameter_m))
         return round(base_len + h_start + h_end, 3)
 
-    elif code == "41":
+    elif code in ("41", "51"):
         w = dimensions.get("width", 0.0)
         d = dimensions.get("depth", 0.0)
         h_len = dimensions.get("hook_length", calculate_hook_allowance("135", diameter_m))
@@ -148,8 +152,8 @@ def calculate_cut_length(
 
 def parse_rebar_spec(spec_str: str) -> Dict[str, Any]:
     """
-    Parses rebar specification strings (e.g. '2DB12', 'RB6@0.175', '4DB16', 'WM4@0.20').
-    Returns dict with count/spacing, bar_mark, diameter_m.
+    Parses rebar specification strings (e.g. '2DB12', 'RB6@0.175', 'RB6@0.10/0.20', '4DB16', 'WM4@0.20').
+    Returns dict with count/spacing (or spacing_end/spacing_mid), bar_mark, diameter_m.
     """
     spec = str(spec_str).strip().upper()
 
@@ -160,7 +164,21 @@ def parse_rebar_spec(spec_str: str) -> Dict[str, Any]:
         mark = normalize_bar_mark(m_count.group(2))
         return {"count": cnt, "bar_mark": mark, "diameter_m": get_bar_diameter(mark)}
 
-    # Pattern for mark and spacing: e.g. "RB6@0.175", "RB9@0.15"
+    # Pattern for two-zone spacing: e.g. "RB6@0.10/0.20" or "RB6@0.10,0.20"
+    m_two_zone = re.match(r"^([A-Z]+\d+)\s*@\s*([\d\.]+)\s*[\/,]\s*([\d\.]+)$", spec)
+    if m_two_zone:
+        mark = normalize_bar_mark(m_two_zone.group(1))
+        s_end = float(m_two_zone.group(2))
+        s_mid = float(m_two_zone.group(3))
+        return {
+            "spacing": s_mid,
+            "spacing_end": s_end,
+            "spacing_mid": s_mid,
+            "bar_mark": mark,
+            "diameter_m": get_bar_diameter(mark),
+        }
+
+    # Pattern for mark and single spacing: e.g. "RB6@0.175", "RB9@0.15"
     m_spacing = re.match(r"^([A-Z]+\d+)\s*@\s*([\d\.]+)$", spec)
     if m_spacing:
         mark = normalize_bar_mark(m_spacing.group(1))
@@ -387,8 +405,9 @@ class BarBendingSchedule:
 
                 # Stirrups
                 st_spec = parse_rebar_spec(elem.stirrup_spec)
-                spacing = st_spec.get("spacing", 0.15)
-                n_stirrups = int(math.ceil(span / spacing)) + 1
+                s_end = getattr(elem, "stirrup_spacing_end", None) or st_spec.get("spacing_end")
+                s_mid = getattr(elem, "stirrup_spacing_mid", None) or st_spec.get("spacing_mid")
+
                 stirrup_w = max(elem.width - 2.0 * cov, 0.05)
                 stirrup_d = max(elem.depth - 2.0 * cov, 0.05)
                 cut_stirrup = calculate_cut_length(
@@ -396,6 +415,24 @@ class BarBendingSchedule:
                     {"width": stirrup_w, "depth": stirrup_d},
                     st_spec["diameter_m"],
                 )
+
+                if s_end and s_mid and s_end > 0 and s_mid > 0:
+                    from chakkree_tools.rc.stirrup_pattern import StirrupPattern
+                    sp = StirrupPattern(
+                        diameter=st_spec["diameter_m"],
+                        width=stirrup_w,
+                        depth=stirrup_d,
+                        length=span,
+                        n_spacing=[[1, s_end], [1, s_mid], [1, s_end]],
+                    )
+                    sp.adjust_offset_for_length(span, offset=(0.05, 0.05), sub_length=(span / 4.0, span / 4.0))
+                    n_stirrups = sp.count_stirrups()
+                    desc = f"Beam Stirrups (2-Zone L/4) @ {s_end*1000:.0f}mm / {s_mid*1000:.0f}mm"
+                else:
+                    spacing = st_spec.get("spacing", 0.15)
+                    n_stirrups = int(math.ceil(span / spacing)) + 1
+                    desc = f"Beam Stirrups @ {spacing*1000:.0f}mm"
+
                 bbs.add_item(
                     RebarItem(
                         member_id=b_id,
@@ -405,7 +442,7 @@ class BarBendingSchedule:
                         num_members=1,
                         bars_per_member=n_stirrups,
                         cut_length=cut_stirrup,
-                        description=f"Beam Stirrups @ {spacing*1000:.0f}mm",
+                        description=desc,
                     )
                 )
 
@@ -528,6 +565,102 @@ class BarBendingSchedule:
             )
         return "\n".join(lines)
 
+    def to_excel_bytes(self) -> bytes:
+        """
+        Exports Bar Bending Schedule directly to Excel (.xlsx) file bytes using
+        a standard OpenXML zip packager (no external dependencies required).
+        """
+        rows = [
+            ["Member ID", "Member Name", "Bar Mark", "Shape Code", "Num Members", "Bars Per Member", "Total Count", "Cut Length (m)", "Total Length (m)", "Unit Weight (kg/m)", "Total Weight (kg)", "Description"]
+        ]
+        for item in self.items:
+            rows.append([
+                item.member_id,
+                item.member_name,
+                item.bar_mark,
+                item.shape_code,
+                item.num_members,
+                item.bars_per_member,
+                item.total_count,
+                round(item.cut_length, 3),
+                round(item.total_length, 3),
+                round(item.unit_weight, 3),
+                round(item.total_weight, 3),
+                item.description,
+            ])
+
+        # Create OpenXML structure
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+            # [Content_Types].xml
+            zf.writestr(
+                "[Content_Types].xml",
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                '<Default Extension="xml" ContentType="application/xml"/>'
+                '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+                '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+                '</Types>',
+            )
+
+            # _rels/.rels
+            zf.writestr(
+                "_rels/.rels",
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
+                '</Relationships>',
+            )
+
+            # xl/_rels/workbook.xml.rels
+            zf.writestr(
+                "xl/_rels/workbook.xml.rels",
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+                '</Relationships>',
+            )
+
+            # xl/workbook.xml
+            zf.writestr(
+                "xl/workbook.xml",
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+                '<sheets><sheet name="Bar Cut Schedule" sheetId="1" r:id="rId1"/></sheets>'
+                '</workbook>',
+            )
+
+            # xl/worksheets/sheet1.xml
+            sheet_rows = []
+            for r_idx, row in enumerate(rows, 1):
+                cells = []
+                for c_idx, val in enumerate(row, 1):
+                    col_letter = chr(64 + c_idx)
+                    cell_ref = f"{col_letter}{r_idx}"
+                    if isinstance(val, (int, float)):
+                        cells.append(f'<c r="{cell_ref}"><v>{val}</v></c>')
+                    else:
+                        val_str = str(val).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+                        cells.append(f'<c r="{cell_ref}" t="inlineStr"><is><t>{val_str}</t></is></c>')
+                sheet_rows.append(f'<row r="{r_idx}">{"".join(cells)}</row>')
+
+            sheet_xml = (
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                f'<sheetData>{"".join(sheet_rows)}</sheetData>'
+                '</worksheet>'
+            )
+            zf.writestr("xl/worksheets/sheet1.xml", sheet_xml)
+
+        return buffer.getvalue()
+
+    def export_excel(self, filepath: str) -> None:
+        """Saves Bar Bending Schedule to an Excel file (.xlsx)."""
+        content = self.to_excel_bytes()
+        with open(filepath, "wb") as f:
+            f.write(content)
+
 
 def export_bbs_to_markdown(schedule: BarBendingSchedule) -> str:
     return schedule.to_markdown()
@@ -535,6 +668,10 @@ def export_bbs_to_markdown(schedule: BarBendingSchedule) -> str:
 
 def export_bbs_to_csv(schedule: BarBendingSchedule) -> str:
     return schedule.to_csv()
+
+
+def export_bbs_to_excel(schedule: BarBendingSchedule, filepath: str) -> None:
+    schedule.export_excel(filepath)
 
 
 def export_bbs_to_json(schedule: BarBendingSchedule) -> str:
