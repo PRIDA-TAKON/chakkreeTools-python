@@ -26,6 +26,8 @@ class Beam:
     bot_bar_spec: str = "3DB12"
     extra_bar_spec: Optional[str] = "1DB12"
     stirrup_spec: str = "RB6@0.175"
+    stirrup_spacing_end: Optional[float] = None  # End support zone spacing s1 (e.g. 0.10m for L/4)
+    stirrup_spacing_mid: Optional[float] = None  # Midspan zone spacing s2 (e.g. 0.20m for L/2)
     covering: float = 0.025  # 25mm
 
     @property
@@ -63,10 +65,14 @@ class Beam:
                 "stirrups": self.stirrup_spec,
                 "covering": round(self.covering, 3),
             },
-            "qto": {
-                "concrete_m3": round(self.concrete_volume, 3),
-                "formwork_m2": round(self.formwork_area, 3),
-            },
+        }
+        if self.stirrup_spacing_end is not None and self.stirrup_spacing_mid is not None:
+            res["rebar"]["stirrup_spacing_end"] = round(self.stirrup_spacing_end, 3)
+            res["rebar"]["stirrup_spacing_mid"] = round(self.stirrup_spacing_mid, 3)
+
+        res["qto"] = {
+            "concrete_m3": round(self.concrete_volume, 3),
+            "formwork_m2": round(self.formwork_area, 3),
         }
         if self.extra_bar_spec:
             res["rebar"]["extra_bottom"] = self.extra_bar_spec
