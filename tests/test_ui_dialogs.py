@@ -203,3 +203,80 @@ def test_plugin_setup(qapp):
     app_fallback.add_menu = None
     setup(app_fallback)
     assert len(app_fallback.actions) > 0
+
+
+def test_get_toolbar_registration():
+    from pathlib import Path
+    from chakkree_tools.ingetrazo_plugin.plugin import ChakkreeToolsPlugin
+
+    plugin = ChakkreeToolsPlugin()
+    tb_reg = plugin.get_toolbar_registration()
+
+    assert tb_reg["toolbar_name"] == "chakkree_tools"
+    actions = tb_reg["actions"]
+    assert len(actions) > 0
+
+    action_names = [a.get("name") for a in actions]
+    assert "FootingTools" in action_names
+    assert "BeamTools" in action_names
+    assert "ColumnTools" in action_names
+    assert "SlabTools" in action_names
+    assert "GridLine" in action_names
+    assert "TakeOff" in action_names
+    assert "ConfigColorRebar" in action_names
+    assert "About" in action_names
+
+    # Check SVG icon file existence for all actions that have icons
+    for item in actions:
+        if item.get("type") != "separator" and "icon" in item:
+            icon_path = Path(item["icon"])
+            assert icon_path.exists(), f"Icon file {icon_path} should exist"
+
+
+def test_native_qtoolbar_creation_and_actions(qapp):
+    from pathlib import Path
+    from PySide6.QtWidgets import QMainWindow, QToolBar
+    from chakkree_tools.ingetrazo_plugin.plugin import setup
+
+    main_win = QMainWindow()
+
+    class MockAppWithWindow:
+        def __init__(self, win):
+            self._win = win
+
+        def window(self):
+            return self._win
+
+    app = MockAppWithWindow(main_win)
+    plugin = setup(app)
+
+    toolbar = main_win.findChild(QToolBar, "ChakkreeToolsToolbar")
+    assert toolbar is not None
+    assert toolbar.windowTitle() == "Chakkree Tools"
+    assert toolbar.isFloatable() is True
+    assert toolbar.isMovable() is True
+
+    actions = toolbar.actions()
+    action_texts = [act.text() for act in actions if act.text()]
+
+    expected_labels = [
+        "Rebar Tools",
+        "Footings",
+        "Columns",
+        "Beams",
+        "Slabs",
+        "Grid Lines",
+        "QTO Take-off",
+        "Export .debim",
+        "Config Colors",
+        "About",
+    ]
+    for label in expected_labels:
+        assert label in action_texts
+
+    # Verify tooltips and icons on QAction
+    for act in actions:
+        if act.isSeparator():
+            continue
+        assert act.toolTip() != ""
+        assert not act.icon().isNull()

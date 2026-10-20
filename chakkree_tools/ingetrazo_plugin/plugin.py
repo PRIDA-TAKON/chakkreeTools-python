@@ -120,6 +120,13 @@ class ChakkreeToolsPlugin(Tool):
                     "icon": str(icons_dir / "ColumnTools.svg"),
                     "action": self.cmd_create_column,
                 },
+                {
+                    "name": "SlabTools",
+                    "label": "Slabs",
+                    "tooltip": "เครื่องมือพื้น ค.ส.ล. / พื้นสำเร็จรูป (Slab Tools)",
+                    "icon": str(icons_dir / "SlabTools.svg"),
+                    "action": self.cmd_create_slab,
+                },
                 {"name": "separator_1", "type": "separator"},
                 {
                     "name": "GridLine",
@@ -713,6 +720,9 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
                 toolbar = QToolBar("Chakkree Tools", win)
                 toolbar.setObjectName(tb_id)
                 toolbar.setIconSize(QSize(24, 24))
+                toolbar.setFloatable(True)
+                toolbar.setMovable(True)
+                toolbar.setAllowedAreas(Qt.AllToolBarAreas)
 
                 icons_dir = Path(__file__).resolve().parent / "resources" / "icons"
                 if not icons_dir.exists():
@@ -723,6 +733,7 @@ def setup(app: Any) -> ChakkreeToolsPlugin:
                     ("FootingTools.svg", "Footings", "เครื่องมือฐานราก (Footing Tools) - ฐานรากเสาเข็ม 1-9 ต้น", plugin.cmd_create_pile_cap),
                     ("ColumnTools.svg", "Columns", "เครื่องมือเสา ค.ส.ล. (Column Tools)", plugin.cmd_create_column),
                     ("BeamTools.svg", "Beams", "เครื่องมือคาน ค.ส.ล. (Beam Tools)", plugin.cmd_create_beam),
+                    ("SlabTools.svg", "Slabs", "เครื่องมือพื้น ค.ส.ล. / พื้นสำเร็จรูป (Slab Tools)", plugin.cmd_create_slab),
                     (None, None, None, None),  # Separator
                     ("GridLine.svg", "Grid Lines", "เครื่องมือกริตไลน์ (GridLine v2026)", plugin.cmd_create_grids),
                     ("TakeOff.svg", "QTO Take-off", "ถอดปริมาณ คอนกรีต ไม้แบบ เหล็กเสริม และ Bar Bending Schedule", plugin.cmd_qto_takeoff),
