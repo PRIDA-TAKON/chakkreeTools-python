@@ -10,6 +10,7 @@ download = "https://github.com/PRIDA-TAKON/chakkreeTools-python/releases/downloa
 sha256 = "46c7655434a883a2ab4a7a877589eccc370d73da6ee330d9faeab37820057eb1"
 
 ingetrazo = "0.5.7"
+screenshot = "chakkree_tools.png"
 
 tags = ["structures", "bim", "architecture", "productivity"]
 
