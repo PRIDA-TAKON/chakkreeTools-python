@@ -7,9 +7,13 @@ import os
 import pytest
 
 # Skip test suite if PySide6 or system GL/EGL GUI libraries are not available
-QtWidgets = pytest.importorskip("PySide6.QtWidgets")
-QApplication = QtWidgets.QApplication
-QDialog = QtWidgets.QDialog
+try:
+    from PySide6.QtWidgets import QApplication, QDialog, QLayout, QMainWindow, QToolBar
+except ImportError as err:
+    pytest.skip(
+        f"Skipping PySide6 UI tests due to missing GUI libraries: {err}",
+        allow_module_level=True,
+    )
 
 # Ensure Qt offscreen platform for headless test environment
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
