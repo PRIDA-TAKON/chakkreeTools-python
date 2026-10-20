@@ -8,7 +8,8 @@ from pathlib import Path
 import os
 import pytest
 
-APPDATA_PLUGINS = Path(os.environ["APPDATA"]) / "ingetrazo" / "plugins"
+APPDATA = os.environ.get("APPDATA")
+APPDATA_PLUGINS = Path(APPDATA) / "ingetrazo" / "plugins" if APPDATA else None
 
 class MockMenu:
     def __init__(self, name: str):
@@ -32,6 +33,7 @@ class MockApp:
         return m
 
 
+@pytest.mark.skipif(not APPDATA_PLUGINS or not APPDATA_PLUGINS.exists(), reason="Requires %APPDATA%/ingetrazo/plugins")
 def test_installed_ingetrazo_plugin_structure_and_loading():
     """
     Directly tests IngeTrazo's real plugin directory to guarantee
