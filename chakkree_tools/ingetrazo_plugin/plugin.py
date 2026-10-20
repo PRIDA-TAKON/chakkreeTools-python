@@ -289,6 +289,119 @@ class ChakkreeToolsPlugin(Tool):
                 self.app.flash_status(f"Stream error: {e}")
             return False
 
+    def _get_scene_and_viewport(self) -> tuple:
+        scene, viewport = None, None
+        if hasattr(self.app, "scene") and callable(self.app.scene):
+            scene = self.app.scene()
+        elif hasattr(self.app, "_window") and hasattr(self.app._window, "viewport"):
+            viewport = self.app._window.viewport
+            scene = getattr(viewport, "scene", None)
+        elif hasattr(self.app, "viewport"):
+            viewport = self.app.viewport
+            scene = getattr(viewport, "scene", None)
+        return scene, viewport
+
+    def _commit_faces_to_scene(self, scene: Any, viewport: Any, faces: List[List[Any]], status_msg: str) -> None:
+        from PySide6.QtGui import QVector3D
+        mesh = scene.mesh
+        for loop in faces:
+            q_pts = [QVector3D(p[0], p[1], p[2]) for p in loop]
+            try:
+                mesh.add_face(q_pts)
+            except Exception:
+                pass
+        if hasattr(scene, "bump_view"):
+            scene.bump_view()
+        elif hasattr(scene, "version"):
+            scene.version += 1
+        if viewport is not None and hasattr(viewport, "update"):
+            viewport.update()
+        elif hasattr(self.app, "viewport") and hasattr(self.app.viewport, "update"):
+            self.app.viewport.update()
+        if hasattr(self.app, "flash_status"):
+            self.app.flash_status(f"Chakkree Tools: {status_msg}")
+        elif viewport is not None and hasattr(viewport, "flash_status"):
+            viewport.flash_status(f"Chakkree Tools: {status_msg}")
+
+    def _render_column_to_scene(self, column: Any) -> None:
+        """Renders 3D column mesh faces into IngeTrazo active scene."""
+        if not self.app:
+            return
+        try:
+            scene, viewport = self._get_scene_and_viewport()
+            if scene is None or not hasattr(scene, "mesh"):
+                return
+            width = float(getattr(column, "width", 0.30))
+            depth = float(getattr(column, "depth", 0.30))
+            height = float(getattr(column, "height", 3.50))
+            pos = getattr(column, "position", (0.0, 0.0))
+            z_bot = float(getattr(column, "elevation", 0.0))
+            z_top = z_bot + height
+            x, y = pos[0], pos[1]
+            hw, hd = width / 2.0, depth / 2.0
+
+            b0 = (x - hw, y - hd, z_bot)
+            b1 = (x + hw, y - hd, z_bot)
+            b2 = (x + hw, y + hd, z_bot)
+            b3 = (x - hw, y + hd, z_bot)
+
+            t0 = (x - hw, y - hd, z_top)
+            t1 = (x + hw, y - hd, z_top)
+            t2 = (x + hw, y + hd, z_top)
+            t3 = (x - hw, y + hd, z_top)
+
+            faces = [
+                [b0, b3, b2, b1],
+                [t0, t1, t2, t3],
+                [b0, b1, t1, t0],
+                [b1, b2, t2, t1],
+                [b2, b3, t3, t2],
+                [b3, b0, t0, t3],
+            ]
+            self._commit_faces_to_scene(scene, viewport, faces, f"Created RC Column {getattr(column, 'id', 'C1')} ({width}x{depth}m, H={height}m)")
+        except Exception as e:
+            print(f"[chakkree_tools] Notice rendering column: {e}")
+
+    def _render_footing_to_scene(self, footing: Any) -> None:
+        """Renders 3D footing mesh faces into IngeTrazo active scene."""
+        if not self.app:
+            return
+        try:
+            scene, viewport = self._get_scene_and_viewport()
+            if scene is None or not hasattr(scene, "mesh"):
+                return
+            width = float(getattr(footing, "width", getattr(footing, "section_x", 1.20)))
+            length = float(getattr(footing, "length", getattr(footing, "section_y", 1.20)))
+            thickness = float(getattr(footing, "thickness", 0.60))
+            pos = getattr(footing, "position", (0.0, 0.0))
+            elevation = float(getattr(footing, "elevation", -0.70))
+            z_top = elevation
+            z_bot = elevation - thickness
+            x, y = pos[0], pos[1]
+            hw, hl = width / 2.0, length / 2.0
+
+            b0 = (x - hw, y - hl, z_bot)
+            b1 = (x + hw, y - hl, z_bot)
+            b2 = (x + hw, y + hl, z_bot)
+            b3 = (x - hw, y + hl, z_bot)
+
+            t0 = (x - hw, y - hl, z_top)
+            t1 = (x + hw, y - hl, z_top)
+            t2 = (x + hw, y + hl, z_top)
+            t3 = (x - hw, y + hl, z_top)
+
+            faces = [
+                [b0, b3, b2, b1],
+                [t0, t1, t2, t3],
+                [b0, b1, t1, t0],
+                [b1, b2, t2, t1],
+                [b2, b3, t3, t2],
+                [b3, b0, t0, t3],
+            ]
+            self._commit_faces_to_scene(scene, viewport, faces, f"Created Footing {getattr(footing, 'id', 'F1')} ({width}x{length}m, T={thickness}m)")
+        except Exception as e:
+            print(f"[chakkree_tools] Notice rendering footing: {e}")
+
     def _render_beam_to_scene(self, beam: Any) -> None:
         """Renders 3D beam mesh faces into IngeTrazo active scene."""
         if not self.app:
@@ -393,6 +506,7 @@ class ChakkreeToolsPlugin(Tool):
                     if dlg.exec() == QDialog.Accepted:
                         f = dlg.get_footing()
                         self.active_elements.append(f)
+                        self._render_footing_to_scene(f)
                         return f
                     return None
             except ImportError:
@@ -404,6 +518,7 @@ class ChakkreeToolsPlugin(Tool):
             pile_count=pile_count,
         )
         self.active_elements.append(f)
+        self._render_footing_to_scene(f)
         return f
 
     def cmd_create_column(
@@ -427,6 +542,7 @@ class ChakkreeToolsPlugin(Tool):
                     if dlg.exec() == QDialog.Accepted:
                         c = dlg.get_column()
                         self.active_elements.append(c)
+                        self._render_column_to_scene(c)
                         return c
                     return None
             except ImportError:
@@ -440,6 +556,7 @@ class ChakkreeToolsPlugin(Tool):
             height=height,
         )
         self.active_elements.append(c)
+        self._render_column_to_scene(c)
         return c
 
     def cmd_create_beam(
