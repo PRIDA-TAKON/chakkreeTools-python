@@ -23,6 +23,39 @@ def qapp():
     yield app
 
 
+def test_footing_dialog_validation_and_live_calc(qapp):
+    from chakkree_tools.ingetrazo_plugin.ui.footing_dialog import FootingDialog
+    from PySide6.QtWidgets import QLayout
+
+    dlg = FootingDialog()
+
+    # Verify numerical validation bounds
+    assert dlg.thickness_spin.minimum() > 0
+    assert dlg.covering_spin.minimum() > 0
+
+    # Verify High-DPI responsiveness properties
+    assert dlg.minimumWidth() >= 380
+    assert dlg.layout().sizeConstraint() == QLayout.SetMinimumSize
+
+    # Verify live calculation summary label updates when pile count / dimensions change
+    initial_text = dlg.calc_info_label.text()
+    assert "Footing Size:" in initial_text
+
+    dlg.pile_count_combo.setCurrentIndex(3)  # Change from 1 pile to 4 piles
+    updated_text = dlg.calc_info_label.text()
+    assert updated_text != initial_text
+    assert "Concrete:" in updated_text
+
+    # Test QDoubleSpinBox bounds clamping preventing negative or zero dimensions
+    dlg.thickness_spin.setValue(0.0)
+    assert dlg.thickness_spin.value() == dlg.thickness_spin.minimum()
+    assert dlg.thickness_spin.value() > 0
+
+    dlg.covering_spin.setValue(-0.05)
+    assert dlg.covering_spin.value() == dlg.covering_spin.minimum()
+    assert dlg.covering_spin.value() > 0
+
+
 def test_footing_dialog_default_and_custom(qapp):
     from chakkree_tools.ingetrazo_plugin.ui.footing_dialog import FootingDialog
     from chakkree_tools.rc.footing import Footing
@@ -58,6 +91,42 @@ def test_footing_dialog_default_and_custom(qapp):
     assert f_custom.thickness == 0.85
     assert f_custom.elevation == -1.50
     assert f_custom.covering == 0.075
+
+
+def test_column_dialog_validation_and_live_calc(qapp):
+    from chakkree_tools.ingetrazo_plugin.ui.column_dialog import ColumnDialog
+    from PySide6.QtWidgets import QLayout
+
+    dlg = ColumnDialog()
+
+    # Verify numerical validation bounds
+    assert dlg.width_spin.minimum() > 0
+    assert dlg.depth_spin.minimum() > 0
+    assert dlg.height_spin.minimum() > 0
+    assert dlg.stirrup_spacing_spin.minimum() > 0
+    assert dlg.covering_spin.minimum() > 0
+
+    # Verify High-DPI responsiveness properties
+    assert dlg.minimumWidth() >= 380
+    assert dlg.layout().sizeConstraint() == QLayout.SetMinimumSize
+
+    # Verify live calculation summary label updates on height / profile change
+    initial_text = dlg.calc_info_label.text()
+    assert "Section:" in initial_text
+
+    dlg.height_spin.setValue(5.00)
+    updated_text = dlg.calc_info_label.text()
+    assert updated_text != initial_text
+    assert "Height: 5.00 m" in updated_text
+
+    # Test QDoubleSpinBox bounds clamping preventing negative or zero dimensions
+    dlg.width_spin.setValue(0.0)
+    assert dlg.width_spin.value() == dlg.width_spin.minimum()
+    assert dlg.width_spin.value() > 0
+
+    dlg.height_spin.setValue(-5.0)
+    assert dlg.height_spin.value() == dlg.height_spin.minimum()
+    assert dlg.height_spin.value() > 0
 
 
 def test_column_dialog_default_and_custom(qapp):
@@ -99,6 +168,44 @@ def test_column_dialog_default_and_custom(qapp):
     assert c_custom.stirrup_dia == 0.010
     assert c_custom.stirrup_spacing == 0.100
     assert c_custom.covering == 0.035
+
+
+def test_beam_dialog_validation_and_live_calc(qapp):
+    from chakkree_tools.ingetrazo_plugin.ui.beam_dialog import BeamDialog
+    from PySide6.QtWidgets import QLayout
+
+    dlg = BeamDialog()
+
+    # Verify numerical validation bounds
+    assert dlg.length_spin.minimum() > 0
+    assert dlg.width_spin.minimum() > 0
+    assert dlg.depth_spin.minimum() > 0
+    assert dlg.stirrup_zone_end_spin.minimum() > 0
+    assert dlg.stirrup_zone_mid_spin.minimum() > 0
+    assert dlg.covering_spin.minimum() > 0
+
+    # Verify High-DPI responsiveness properties
+    assert dlg.minimumWidth() >= 400
+    assert dlg.layout().sizeConstraint() == QLayout.SetMinimumSize
+
+    # Verify live calculation summary label updates when beam span changes
+    initial_text = dlg.calc_info_label.text()
+    assert "Span: 4.00 m" in initial_text
+
+    dlg.length_spin.setValue(8.00)
+    updated_text = dlg.calc_info_label.text()
+    assert updated_text != initial_text
+    assert "Span: 8.00 m" in updated_text
+    assert "L/4 end: 2.00 m" in updated_text
+
+    # Test QDoubleSpinBox bounds clamping preventing negative or zero dimensions
+    dlg.length_spin.setValue(0.0)
+    assert dlg.length_spin.value() == dlg.length_spin.minimum()
+    assert dlg.length_spin.value() > 0
+
+    dlg.depth_spin.setValue(-1.0)
+    assert dlg.depth_spin.value() == dlg.depth_spin.minimum()
+    assert dlg.depth_spin.value() > 0
 
 
 def test_beam_dialog_default_and_custom(qapp):
@@ -143,6 +250,46 @@ def test_beam_dialog_default_and_custom(qapp):
     assert b_custom.extra_bar_spec == "2DB16"
     assert b_custom.stirrup_spec == "RB9@0.100/0.200/0.100"
     assert b_custom.covering == 0.030
+
+
+def test_slab_dialog_validation_and_live_calc(qapp):
+    from chakkree_tools.ingetrazo_plugin.ui.slab_dialog import SlabDialog
+    from PySide6.QtWidgets import QLayout
+
+    dlg = SlabDialog()
+
+    # Verify numerical validation bounds
+    assert dlg.span_x_spin.minimum() > 0
+    assert dlg.span_y_spin.minimum() > 0
+    assert dlg.thickness_spin.minimum() > 0
+    assert dlg.topping_spin.minimum() > 0
+
+    # Verify High-DPI responsiveness properties
+    assert dlg.minimumWidth() >= 380
+    assert dlg.layout().sizeConstraint() == QLayout.SetMinimumSize
+
+    # Verify live calculation summary label updates when span_x or type changes
+    initial_text = dlg.calc_info_label.text()
+    assert "Area: 16.00 m²" in initial_text
+
+    dlg.span_x_spin.setValue(5.0)
+    updated_text = dlg.calc_info_label.text()
+    assert updated_text != initial_text
+    assert "Area: 20.00 m²" in updated_text
+
+    # Test type change updates live calculations
+    dlg.type_combo.setCurrentIndex(1)  # Cast-in-place RC
+    rc_text = dlg.calc_info_label.text()
+    assert "Type: RC" in rc_text
+
+    # Test QDoubleSpinBox bounds clamping preventing negative or zero dimensions
+    dlg.span_x_spin.setValue(0.0)
+    assert dlg.span_x_spin.value() == dlg.span_x_spin.minimum()
+    assert dlg.span_x_spin.value() > 0
+
+    dlg.thickness_spin.setValue(-0.5)
+    assert dlg.thickness_spin.value() == dlg.thickness_spin.minimum()
+    assert dlg.thickness_spin.value() > 0
 
 
 def test_plugin_cmd_creators(qapp):

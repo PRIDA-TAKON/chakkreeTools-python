@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLayout,
 )
 
 from chakkree_tools.rc.beam import Beam
@@ -28,12 +29,14 @@ class BeamDialog(QDialog):
     def __init__(self, parent: Optional[Any] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Parametric RC Beam")
-        self.resize(380, 520)
+        self.setMinimumWidth(400)
 
         self._setup_ui()
+        self._update_live_calc()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
+        layout.setSizeConstraint(QLayout.SetMinimumSize)
 
         group_box = QGroupBox("Beam Parameters", self)
         form_layout = QFormLayout(group_box)
@@ -44,26 +47,29 @@ class BeamDialog(QDialog):
 
         # Span Length (L)
         self.length_spin = QDoubleSpinBox(self)
-        self.length_spin.setRange(0.50, 30.00)
+        self.length_spin.setRange(0.10, 100.00)
         self.length_spin.setSingleStep(0.25)
         self.length_spin.setValue(4.00)
         self.length_spin.setSuffix(" m")
+        self.length_spin.valueChanged.connect(self._update_live_calc)
         form_layout.addRow("Span Length (L):", self.length_spin)
 
         # Width (b)
         self.width_spin = QDoubleSpinBox(self)
-        self.width_spin.setRange(0.10, 2.00)
+        self.width_spin.setRange(0.05, 5.00)
         self.width_spin.setSingleStep(0.05)
         self.width_spin.setValue(0.20)
         self.width_spin.setSuffix(" m")
+        self.width_spin.valueChanged.connect(self._update_live_calc)
         form_layout.addRow("Width (b):", self.width_spin)
 
         # Depth (h)
         self.depth_spin = QDoubleSpinBox(self)
-        self.depth_spin.setRange(0.15, 3.00)
+        self.depth_spin.setRange(0.05, 5.00)
         self.depth_spin.setSingleStep(0.05)
         self.depth_spin.setValue(0.40)
         self.depth_spin.setSuffix(" m")
+        self.depth_spin.valueChanged.connect(self._update_live_calc)
         form_layout.addRow("Depth (h):", self.depth_spin)
 
         # Elevation Z (m)
@@ -95,33 +101,44 @@ class BeamDialog(QDialog):
         stirrup_layout.addRow("Stirrup Bar:", self.stirrup_bar_combo)
 
         self.stirrup_zone_end_spin = QDoubleSpinBox(self)
-        self.stirrup_zone_end_spin.setRange(0.05, 0.40)
+        self.stirrup_zone_end_spin.setRange(0.01, 1.00)
         self.stirrup_zone_end_spin.setSingleStep(0.025)
         self.stirrup_zone_end_spin.setDecimals(3)
         self.stirrup_zone_end_spin.setValue(0.100)
         self.stirrup_zone_end_spin.setSuffix(" m")
+        self.stirrup_zone_end_spin.valueChanged.connect(self._update_live_calc)
         stirrup_layout.addRow("End Zones Spacing (L/4):", self.stirrup_zone_end_spin)
 
         self.stirrup_zone_mid_spin = QDoubleSpinBox(self)
-        self.stirrup_zone_mid_spin.setRange(0.05, 0.40)
+        self.stirrup_zone_mid_spin.setRange(0.01, 1.00)
         self.stirrup_zone_mid_spin.setSingleStep(0.025)
         self.stirrup_zone_mid_spin.setDecimals(3)
         self.stirrup_zone_mid_spin.setValue(0.200)
         self.stirrup_zone_mid_spin.setSuffix(" m")
+        self.stirrup_zone_mid_spin.valueChanged.connect(self._update_live_calc)
         stirrup_layout.addRow("Mid Zone Spacing (L/2):", self.stirrup_zone_mid_spin)
 
         form_layout.addRow(stirrup_box)
 
         # Covering (m)
         self.covering_spin = QDoubleSpinBox(self)
-        self.covering_spin.setRange(0.01, 0.10)
+        self.covering_spin.setRange(0.005, 0.20)
         self.covering_spin.setSingleStep(0.005)
         self.covering_spin.setDecimals(3)
         self.covering_spin.setValue(0.025)
         self.covering_spin.setSuffix(" m")
+        self.covering_spin.valueChanged.connect(self._update_live_calc)
         form_layout.addRow("Covering:", self.covering_spin)
 
         layout.addWidget(group_box)
+
+        # Live Calculation Summary Group
+        calc_box = QGroupBox("Live Calculation Summary", self)
+        calc_layout = QVBoxLayout(calc_box)
+        self.calc_info_label = QLabel(self)
+        self.calc_info_label.setWordWrap(True)
+        calc_layout.addWidget(self.calc_info_label)
+        layout.addWidget(calc_box)
 
         # Buttons
         self.button_box = QDialogButtonBox(
@@ -130,6 +147,19 @@ class BeamDialog(QDialog):
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         layout.addWidget(self.button_box)
+
+    def _update_live_calc(self) -> None:
+        """Recalculate beam properties and update summary label in real-time."""
+        try:
+            beam = self.get_beam()
+            end_zone_len = beam.length / 4.0
+            mid_zone_len = beam.length / 2.0
+            self.calc_info_label.setText(
+                f"Span: {beam.length:.2f} m (L/4 end: {end_zone_len:.2f} m, L/2 mid: {mid_zone_len:.2f} m)\n"
+                f"Concrete: {beam.concrete_volume:.3f} m³ | Formwork: {beam.formwork_area:.2f} m²"
+            )
+        except ValueError as exc:
+            self.calc_info_label.setText(f"Invalid input: {exc}")
 
     def get_beam(self) -> Beam:
         """
@@ -148,12 +178,21 @@ class BeamDialog(QDialog):
         s_end = self.stirrup_zone_end_spin.value()
         s_mid = self.stirrup_zone_mid_spin.value()
 
+        if length <= 0:
+            raise ValueError("Beam span length must be greater than zero.")
+        if width <= 0 or depth <= 0:
+            raise ValueError("Beam width and depth must be greater than zero.")
+        if s_end <= 0 or s_mid <= 0:
+            raise ValueError("Stirrup spacing must be greater than zero.")
+
+        covering = self.covering_spin.value()
+        if covering <= 0:
+            raise ValueError("Covering must be greater than zero.")
+
         if abs(s_end - s_mid) < 1e-4:
             stirrup_spec = f"{bar_type}@{s_end:.3f}"
         else:
             stirrup_spec = f"{bar_type}@{s_end:.3f}/{s_mid:.3f}/{s_end:.3f}"
-
-        covering = self.covering_spin.value()
 
         return Beam(
             id=beam_id,
