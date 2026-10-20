@@ -212,3 +212,32 @@ def export_takeoff_to_csv(takeoff: MaterialTakeoff) -> str:
 
 def export_takeoff_to_json(takeoff: MaterialTakeoff) -> str:
     return takeoff.to_json()
+
+@dataclass
+class QTOSummaryResult:
+    total_elements: int
+    total_concrete_volume_m3: float
+    total_formwork_area_m2: float
+    total_lean_concrete_m3: float
+    total_sand_bedding_m3: float
+    total_excavation_m3: float
+    total_rebar_weight_kg: float
+    rebar_weight_by_size: Dict[str, float]
+    category_summary: Dict[str, Dict[str, float]]
+
+
+def generate_qto_summary(elements: List[Any]) -> QTOSummaryResult:
+    takeoff = MaterialTakeoff(elements=elements)
+    s = takeoff.get_summary()
+    rebar_map = {k: v.get('total_weight_kg', 0.0) for k, v in s.get('rebar_summary', {}).items() if v.get('total_weight_kg', 0.0) > 0}
+    return QTOSummaryResult(
+        total_elements=s.get('total_elements', 0),
+        total_concrete_volume_m3=s.get('total_concrete_m3', 0.0),
+        total_formwork_area_m2=s.get('total_formwork_m2', 0.0),
+        total_lean_concrete_m3=s.get('total_lean_concrete_m3', 0.0),
+        total_sand_bedding_m3=s.get('total_sand_bedding_m3', 0.0),
+        total_excavation_m3=s.get('total_excavation_m3', 0.0),
+        total_rebar_weight_kg=s.get('total_rebar_weight_kg', 0.0),
+        rebar_weight_by_size=rebar_map,
+        category_summary=s.get('category_summary', {}),
+    )
